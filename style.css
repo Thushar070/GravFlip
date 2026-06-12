@@ -93,3 +93,15 @@ body.game-running {
 #tap-zone.hidden {
   display: none;
 }
+
+#tap-zone.mode-blitz {
+  background: rgba(255, 136, 0, 0.08);
+  border-color: rgba(255, 136, 0, 0.3);
+  color: rgba(255, 136, 0, 0.5);
+}
+
+#tap-zone.mode-mirror {
+  background: rgba(255, 68, 170, 0.08);
+  border-color: rgba(255, 68, 170, 0.3);
+  color: rgba(255, 68, 170, 0.5);
+}
