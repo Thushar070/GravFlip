@@ -2252,7 +2252,7 @@ function handlePauseToggle() {
 document.addEventListener('keydown', (e) => {
   if (gs.screen === 'modeselect') {
     if (e.code === 'ArrowLeft') { e.preventDefault(); if (gs.modeSelectIndex > 0) gs.modeSelectIndex--; return; }
-    if (e.code === 'ArrowRight') { e.preventDefault(); if (gs.modeSelectIndex < 3) gs.modeSelectIndex++; return; }
+    if (e.code === 'ArrowRight') { e.preventDefault(); if (gs.modeSelectIndex < 4) gs.modeSelectIndex++; return; }
   }
   if (gs.screen === 'worldcomplete') {
     if (e.code === 'ArrowLeft') { e.preventDefault(); gs.worldCompleteSelectIndex = 0; return; }
