@@ -1778,36 +1778,36 @@ function generateObstacle() {
     if (distAtSpawn - gs.lastSawDist >= gs.sawInterval) candidates.push('saw');
     
     if (candidates.length > 0) {
-      type = candidates[Math.floor(Math.random() * candidates.length)];
+      type = candidates[Math.floor(gameRandom() * candidates.length)];
     }
   }
   
   if (type === 'basic') {
-    const fromFloor = Math.random() > 0.5;
-    const w = GAMEPLAY.OBSTACLE_MIN_W + Math.random() * (GAMEPLAY.OBSTACLE_MAX_W - GAMEPLAY.OBSTACLE_MIN_W);
+    const fromFloor = gameRandom() > 0.5;
+    const w = GAMEPLAY.OBSTACLE_MIN_W + gameRandom() * (GAMEPLAY.OBSTACLE_MAX_W - GAMEPLAY.OBSTACLE_MIN_W);
     const gapMult = gs.mode === 'blitz' ? 0.8 : 1;
     const minGap = GAMEPLAY.MIN_GAP * gapMult;
     const maxH = playH - minGap;
-    const h = 40 + Math.random() * Math.max(1, maxH - 40);
+    const h = 40 + gameRandom() * Math.max(1, maxH - 40);
     const x = gs.nextObstacleX;
     const y = fromFloor ? floorY - h : ceilY;
     
     const isCampaignW3 = gs.mode === 'campaign' && gs.campaign && gs.campaign.currentWorld === 3;
     if (isCampaignW3) {
-      const size = 35 + Math.random() * 10;
+      const size = 35 + gameRandom() * 10;
       const asteroidY = fromFloor ? floorY - size : ceilY;
       gs.obstacles.push({
         type: 'basic',
         isAsteroid: true,
-        rotation: Math.random() * Math.PI,
-        rotSpeed: (Math.random() > 0.5 ? 1 : -1) * (0.01 + Math.random() * 0.02),
+        rotation: gameRandom() * Math.PI,
+        rotSpeed: (gameRandom() > 0.5 ? 1 : -1) * (0.01 + gameRandom() * 0.02),
         x, y: asteroidY, width: size, height: size, fromFloor,
-        glowPhase: Math.random() * Math.PI * 2
+        glowPhase: gameRandom() * Math.PI * 2
       });
     } else {
       gs.obstacles.push({
         type: 'basic', x, y, width: w, height: h, fromFloor,
-        glowPhase: Math.random() * Math.PI * 2
+        glowPhase: gameRandom() * Math.PI * 2
       });
     }
     
@@ -1816,13 +1816,13 @@ function generateObstacle() {
     const gapReduction = Math.max(0, (gs.currentZone - 1) * 15);
     const gMin = GAMEPLAY.GAP_MIN * gapMult;
     const gMax = GAMEPLAY.GAP_MAX * gapMult;
-    const gap = Math.max(gMin * 0.7, gMin + Math.random() * (gMax - gMin) - gapReduction);
+    const gap = Math.max(gMin * 0.7, gMin + gameRandom() * (gMax - gMin) - gapReduction);
     gs.nextObstacleX = x + gap;
     
-    if (Math.random() > 0.35) {
+    if (gameRandom() > 0.35) {
       let sY;
-      if (fromFloor) sY = ceilY + 20 + Math.random() * Math.max(1, y - ceilY - 40);
-      else sY = (y + h + 20) + Math.random() * Math.max(1, floorY - y - h - 40);
+      if (fromFloor) sY = ceilY + 20 + gameRandom() * Math.max(1, y - ceilY - 40);
+      else sY = (y + h + 20) + gameRandom() * Math.max(1, floorY - y - h - 40);
       sY = Math.max(ceilY + 15, Math.min(floorY - 15, sY));
       
       let starShape = 'star';
@@ -1833,8 +1833,8 @@ function generateObstacle() {
         else if (gs.campaign.currentWorld === 5) starShape = 'rainbow';
       }
       gs.stars.push({
-        x: x + w / 2 + (Math.random() - 0.5) * 60, y: sY,
-        radius: GAMEPLAY.STAR_RADIUS, phase: Math.random() * Math.PI * 2,
+        x: x + w / 2 + (gameRandom() - 0.5) * 60, y: sY,
+        radius: GAMEPLAY.STAR_RADIUS, phase: gameRandom() * Math.PI * 2,
         shape: starShape
       });
     }
@@ -1847,9 +1847,9 @@ function generateObstacle() {
       glowPhase: 0
     });
     gs.lastLaserDist = distAtSpawn;
-    gs.laserInterval = 800 + Math.random() * 400;
+    gs.laserInterval = 800 + gameRandom() * 400;
     gs.lastObstacleType = 'laser';
-    gs.nextObstacleX = x + 300 + Math.random() * 150;
+    gs.nextObstacleX = x + 300 + gameRandom() * 150;
   } else if (type === 'crusher') {
     const x = gs.nextObstacleX;
     gs.obstacles.push({
@@ -1859,41 +1859,41 @@ function generateObstacle() {
       glowPhase: 0
     });
     gs.lastCrusherDist = distAtSpawn;
-    gs.crusherInterval = 600 + Math.random() * 400;
+    gs.crusherInterval = 600 + gameRandom() * 400;
     gs.lastObstacleType = 'crusher';
-    gs.nextObstacleX = x + 250 + Math.random() * 150;
+    gs.nextObstacleX = x + 250 + gameRandom() * 150;
   } else if (type === 'phantom') {
     const x = gs.nextObstacleX;
-    const fromFloor = Math.random() > 0.5;
+    const fromFloor = gameRandom() > 0.5;
     const w = 40;
     const h = 60;
     const y = fromFloor ? floorY - h : ceilY;
     gs.obstacles.push({
       type: 'phantom',
       x, y, width: w, height: h,
-      isSolid: Math.random() > 0.5,
+      isSolid: gameRandom() > 0.5,
       revealed: false,
       glowPhase: 0
     });
     gs.lastPhantomDist = distAtSpawn;
-    gs.phantomInterval = 500 + Math.random() * 300;
+    gs.phantomInterval = 500 + gameRandom() * 300;
     gs.lastObstacleType = 'phantom';
-    gs.nextObstacleX = x + 220 + Math.random() * 100;
+    gs.nextObstacleX = x + 220 + gameRandom() * 100;
   } else if (type === 'saw') {
     const x = gs.nextObstacleX;
     const r = 18;
-    const centerY = ceilY + 50 + Math.random() * (playH - 100);
+    const centerY = ceilY + 50 + gameRandom() * (playH - 100);
     gs.obstacles.push({
       type: 'saw',
       x: x + r, y: centerY, centerY, radius: r, width: r * 2, height: r * 2,
-      rotation: Math.random() * Math.PI,
-      bobPhase: Math.random() * Math.PI * 2,
+      rotation: gameRandom() * Math.PI,
+      bobPhase: gameRandom() * Math.PI * 2,
       glowPhase: 0
     });
     gs.lastSawDist = distAtSpawn;
-    gs.sawInterval = 400 + Math.random() * 300;
+    gs.sawInterval = 400 + gameRandom() * 300;
     gs.lastObstacleType = 'saw';
-    gs.nextObstacleX = x + 200 + Math.random() * 100;
+    gs.nextObstacleX = x + 200 + gameRandom() * 100;
   }
 }
 
