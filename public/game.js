@@ -3302,11 +3302,21 @@ function drawStarfieldBg() {
     } else if (theme === 'aurora') {
       const hue = (i * 17) % 360;
       color = 'hsla(' + hue + ', 100%, 75%, ' + s.brightness + ')';
+    } else if (theme === 'winter_neon') {
+      color = 'rgba(180,240,255,' + s.brightness + ')';
+    } else if (theme === 'synthwave_sunset') {
+      // mix of orange, hot pink and magenta stars
+      const indexColor = i % 3;
+      if (indexColor === 0) color = 'rgba(255, 0, 128, ' + s.brightness + ')'; // hot pink
+      else if (indexColor === 1) color = 'rgba(255, 170, 0, ' + s.brightness + ')'; // orange
+      else color = 'rgba(180, 0, 255, ' + s.brightness + ')'; // magenta/purple
     }
     
     let size = s.size;
     if (theme === 'neongrid') {
       size = s.size * 1.5;
+    } else if (theme === 'winter_neon') {
+      size = s.size * 1.8; // snow particles look a bit larger/soft
     }
     
     ctx.fillStyle = color;
