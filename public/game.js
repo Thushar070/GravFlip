@@ -1846,13 +1846,47 @@ function drawNebulas() {
   ctx.save();
   for (let i = 0; i < gs.nebulas.length; i++) {
     const n = gs.nebulas[i];
-    const grd = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, Math.max(n.rx, n.ry));
-    grd.addColorStop(0, n.color + n.opacity + ')');
-    grd.addColorStop(1, n.color + '0)');
-    ctx.fillStyle = grd;
+    
+    // Pass 1: Outer main gas cloud (soft, wide glow)
+    ctx.save();
+    const outerGrd = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, Math.max(n.rx, n.ry));
+    outerGrd.addColorStop(0, n.color + n.opacity + ')');
+    outerGrd.addColorStop(0.5, n.color + (n.opacity * 0.45) + ')');
+    outerGrd.addColorStop(1, n.color + '0)');
+    ctx.fillStyle = outerGrd;
     ctx.beginPath();
     ctx.ellipse(n.x, n.y, n.rx, n.ry, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+    
+    // Pass 2: Inner offset core cloud (brighter, organic complementary color)
+    ctx.save();
+    const offsetX = Math.sin(gs.frameCount * 0.015 + i * 1.5) * 8;
+    const offsetY = Math.cos(gs.frameCount * 0.015 + i * 1.5) * 5;
+    const coreX = n.x + offsetX;
+    const coreY = n.y + offsetY;
+    const coreRx = n.rx * 0.45;
+    const coreRy = n.ry * 0.45;
+    
+    let coreColor = n.color;
+    if (n.color.includes('60,40,150')) {
+      coreColor = 'rgba(230,40,150,'; // Purple -> Pink core
+    } else if (n.color.includes('150,40,100')) {
+      coreColor = 'rgba(255,140,40,'; // Magenta -> Orange core
+    } else if (n.color.includes('40,120,120')) {
+      coreColor = 'rgba(40,220,255,'; // Teal -> Cyan core
+    }
+    
+    const coreGrd = ctx.createRadialGradient(coreX, coreY, 0, coreX, coreY, Math.max(coreRx, coreRy));
+    coreGrd.addColorStop(0, coreColor + (n.opacity * 1.6) + ')');
+    coreGrd.addColorStop(0.4, coreColor + (n.opacity * 0.8) + ')');
+    coreGrd.addColorStop(1, coreColor + '0)');
+    
+    ctx.fillStyle = coreGrd;
+    ctx.beginPath();
+    ctx.ellipse(coreX, coreY, coreRx, coreRy, 0.25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
   ctx.restore();
 }
