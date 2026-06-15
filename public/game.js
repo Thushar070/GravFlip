@@ -1224,13 +1224,41 @@ function updateObstacles(dt) {
       }
     } else if (obs.type === 'crusher') {
       obs.moveTimer += dt * 16.67;
+      
+      const floorY = DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT;
+      const ceilY = DISPLAY.FLOOR_HEIGHT;
+      
       if (obs.moveTimer >= 2000) {
         obs.moveTimer = 0;
         obs.moveDirection = -obs.moveDirection;
+        
+        // Trigger impact effect on completion of travel
+        if (obs.x < DISPLAY.WIDTH && obs.x + obs.width > 0) {
+          triggerScreenShake(3.5, 200);
+          
+          // Spawn impact sparks
+          const sparkY = obs.moveDirection === -1 ? floorY : ceilY;
+          for (let pIdx = 0; pIdx < 12; pIdx++) {
+            gs.particles.push({
+              x: obs.x + Math.random() * obs.width,
+              y: sparkY,
+              vx: (Math.random() - 0.5) * 5,
+              vy: obs.moveDirection === -1 ? -(1 + Math.random() * 3) : (1 + Math.random() * 3),
+              life: 15 + Math.random() * 15,
+              maxLife: 30,
+              color: '#ffaa00',
+              size: 1.2 + Math.random() * 1.8
+            });
+          }
+          
+          // Play impact sound if crusher is near the player
+          if (obs.x > gs.player.x - 100 && obs.x < gs.player.x + 350) {
+            landingThud();
+          }
+        }
       }
+      
       const t = obs.moveTimer / 2000;
-      const floorY = DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT;
-      const ceilY = DISPLAY.FLOOR_HEIGHT;
       const startY = obs.moveDirection === -1 ? floorY - 40 : ceilY;
       const endY = obs.moveDirection === -1 ? ceilY : floorY - 40;
       obs.y = startY + (endY - startY) * t;
@@ -1365,6 +1393,10 @@ function updateNebulaColors() {
     gs.nebulas[1].color = 'rgba(180,40,40,';
     gs.nebulas[2].color = 'rgba(140,40,60,';
   }
+}
+
+function triggerScreenShake(intensity, duration) {
+  gs.screenShake = { active: true, intensity, duration, timer: 0 };
 }
 
 function updateScreenShake(dt) {
@@ -2357,17 +2389,21 @@ function drawObstacles() {
       ctx.restore();
     } else if (o.type === 'crusher') {
       ctx.save();
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#ff5500';
-      ctx.fillStyle = '#444444';
-      ctx.fillRect(o.x, o.y, o.width, o.height);
       
-      ctx.strokeStyle = '#ffaa00';
-      ctx.lineWidth = 4;
+      // 1. Draw base block with deep metallic color & round corners
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#ff5500';
+      ctx.fillStyle = '#22222c';
+      roundRect(ctx, o.x, o.y, o.width, o.height, 6);
+      ctx.fill();
+      
+      // 2. Draw industrial warning diagonal stripes inside the body
       ctx.save();
       ctx.beginPath();
-      ctx.rect(o.x, o.y, o.width, o.height);
+      roundRect(ctx, o.x, o.y, o.width, o.height, 6);
       ctx.clip();
+      ctx.strokeStyle = '#ff9900';
+      ctx.lineWidth = 5;
       ctx.beginPath();
       for (let sx = o.x - 40; sx < o.x + o.width + 40; sx += 15) {
         ctx.moveTo(sx, o.y);
@@ -2376,11 +2412,61 @@ function drawObstacles() {
       ctx.stroke();
       ctx.restore();
       
-      ctx.strokeStyle = '#666';
-      ctx.lineWidth = 1.5;
+      // Outer border outline
+      ctx.strokeStyle = '#44445c';
+      ctx.lineWidth = 2;
       ctx.strokeRect(o.x, o.y, o.width, o.height);
+      
+      // 3. Draw Rivets/Bolts at 4 corners
+      ctx.fillStyle = '#77778f';
+      ctx.strokeStyle = '#11111a';
+      ctx.lineWidth = 1;
+      const boltPadding = 6;
+      const boltRadius = 2.5;
+      const bolts = [
+        { x: o.x + boltPadding, y: o.y + boltPadding },
+        { x: o.x + o.width - boltPadding, y: o.y + boltPadding },
+        { x: o.x + boltPadding, y: o.y + o.height - boltPadding },
+        { x: o.x + o.width - boltPadding, y: o.y + o.height - boltPadding }
+      ];
+      bolts.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, boltRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Shiny reflection dot on rivet
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(b.x - 1, b.y - 1, 1, 1);
+        ctx.fillStyle = '#77778f'; // reset
+      });
+      
+      // 4. Crushing Face Glow Highlight (glowing neon edge where impact happens)
+      ctx.save();
+      const faceY = o.moveDirection === -1 ? o.y + o.height : o.y;
+      
+      // Outer glow
+      ctx.strokeStyle = '#ff3300';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#ff3300';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(o.x + 2, faceY);
+      ctx.lineTo(o.x + o.width - 2, faceY);
+      ctx.stroke();
+      
+      // Inner bright core
+      ctx.strokeStyle = '#ffffff';
+      ctx.shadowBlur = 3;
+      ctx.shadowColor = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(o.x + 4, faceY);
+      ctx.lineTo(o.x + o.width - 4, faceY);
+      ctx.stroke();
       ctx.restore();
       
+      // 5. Draw Warning Ticker Line on floor/ceiling prior to impact slam
       if (o.moveTimer >= 1700) {
         const targetY = o.moveDirection === -1 ? ceilY : floorY;
         ctx.save();
@@ -2394,6 +2480,7 @@ function drawObstacles() {
         ctx.stroke();
         ctx.restore();
       }
+      ctx.restore();
     } else if (o.type === 'phantom') {
       ctx.save();
       ctx.globalAlpha = o.revealed ? 0.15 : 0.4;
