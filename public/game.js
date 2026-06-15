@@ -150,6 +150,10 @@ async function fetchClientProfileOnBoot() {
         if (window.ProfileUI && window.ProfileUI.init) {
           window.ProfileUI.init();
         }
+        if (clientProfile.selectedTheme && clientProfile.selectedTheme !== 'none') {
+          gs.theme = clientProfile.selectedTheme;
+          updateNebulaColors();
+        }
       }
     }
   } catch (e) {
