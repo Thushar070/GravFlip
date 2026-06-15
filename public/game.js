@@ -2117,7 +2117,7 @@ function retryCampaignWorld() {
 }
 
 function confirmModeSelection() {
-  const modes = ['classic', 'mirror', 'blitz', 'campaign'];
+  const modes = ['classic', 'mirror', 'blitz', 'campaign', 'daily'];
   const sel = modes[gs.modeSelectIndex];
   
   if (sel === 'campaign') {
@@ -2136,7 +2136,15 @@ function confirmModeSelection() {
   gs = createInitialState();
   gs.mode = sel;
   gs.modeSelectIndex = idx;
-  gs.highScore = loadHighScore(sel);
+  
+  if (sel === 'daily' && dailyChallenge) {
+    gs.highScore = loadHighScore('daily_' + dailyChallenge.date);
+    gs.daily = dailyChallenge;
+    setGameSeed(dailyChallenge.seed);
+  } else {
+    gs.highScore = loadHighScore(sel);
+  }
+
   gs.starfield = sf;
   gs.nebulas = neb;
   gs.frameCount = fc;
@@ -2146,8 +2154,9 @@ function confirmModeSelection() {
   gs.gameStartTime = performance.now();
   gs._lastGameData = null;
 
-  if (sel === 'blitz') gs.speed = 5;
-  if (sel === 'mirror') gs.player2 = createPlayer(0.8, true);
+  const activeSubMode = (sel === 'daily' && dailyChallenge) ? dailyChallenge.mode : sel;
+  if (activeSubMode === 'blitz') gs.speed = 5;
+  if (activeSubMode === 'mirror') gs.player2 = createPlayer(0.8, true);
 
   updateNebulaColors();
   startDrone();
