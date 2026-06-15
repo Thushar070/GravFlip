@@ -24,6 +24,31 @@ async function fetchDailyChallenge() {
   }
 }
 
+let recentScores = [];
+let recentScoresText = "";
+let recentScoresOffset = 800; // DISPLAY.WIDTH
+let lastTickerFetchTime = 0;
+
+async function fetchRecentScoresForTicker() {
+  try {
+    const res = await fetch('/api/scores/recent');
+    if (res.ok) {
+      const data = await res.json();
+      recentScores = data.scores || [];
+      if (recentScores.length > 0) {
+        recentScoresText = recentScores.map(s => {
+          const modeName = s.mode ? s.mode.toUpperCase() : 'CLASSIC';
+          return `${s.name || 'Anonymous'} (${modeName}): ${s.score}`;
+        }).join('   │   ');
+      } else {
+        recentScoresText = "WAITING FOR NEW RUNS... FLIP GRAVITY AND RECORD A SCORE!";
+      }
+    }
+  } catch (e) {
+    console.error('Failed to fetch recent scores for ticker:', e);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  API LAYER — Session, Leaderboard, Score Submission
 // ═══════════════════════════════════════════════════════════════
