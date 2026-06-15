@@ -331,17 +331,756 @@ body.game-running {
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* === RESPONSIVE === */
+/* === FLOATING MENU === */
+.floating-menu {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  gap: 10px;
+  z-index: 15;
+}
+
+.menu-btn {
+  background: rgba(10, 10, 26, 0.7);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+  color: #00ffff;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.menu-btn:hover {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.35);
+}
+
+/* === PROFILE PANEL === */
+.profile-panel {
+  min-width: 520px;
+  max-width: 650px;
+  width: 95%;
+  height: 85%;
+  max-height: 520px;
+  padding: 24px;
+  gap: 12px;
+}
+
+.profile-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(68, 68, 255, 0.15);
+  padding-bottom: 12px;
+}
+
+.profile-title-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.active-badge-tag {
+  font-size: 9px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ffa500, #ff4400);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+  box-shadow: 0 0 8px rgba(255, 68, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+.edit-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #888;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+  border-color: #00ffff;
+  color: #00ffff;
+}
+
+#edit-username-container {
+  display: flex;
+  gap: 6px;
+}
+
+#edit-username-input {
+  background: #111133;
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  padding: 2px 8px;
+  max-width: 150px;
+  outline: none;
+}
+
+.small-btn {
+  background: #0044cc;
+  border: 1px solid #00ffff;
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.close-icon-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.close-icon-btn:hover {
+  color: #ff3333;
+}
+
+/* === TABS === */
+.profile-tabs {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 2px;
+}
+
+.profile-tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #666;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+  flex: 1;
+  text-align: center;
+}
+
+.profile-tab-btn:hover {
+  color: #bbb;
+}
+
+.profile-tab-btn.active {
+  color: #00ffff;
+  border-bottom-color: #00ffff;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.35);
+}
+
+/* === CONTENT PANEL === */
+.profile-content {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 8px;
+}
+
+.tab-panel {
+  display: none;
+  width: 100%;
+  height: 100%;
+  animation: fadeIn 0.2s ease;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* Scrollbar styling for panels */
+.profile-content::-webkit-scrollbar {
+  width: 4px;
+}
+.profile-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.profile-content::-webkit-scrollbar-thumb {
+  background: rgba(68, 68, 255, 0.15);
+  border-radius: 2px;
+}
+
+/* === OVERVIEW TAB === */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+  height: 100%;
+}
+
+.avatar-customizer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 16px;
+  gap: 12px;
+}
+
+.avatar-preview-container {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #101030 0%, #050515 100%);
+  border: 2px solid rgba(0, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.customizer-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.option-row label {
+  font-size: 11px;
+  color: #aaa;
+  letter-spacing: 0.5px;
+}
+
+.option-row input[type="color"] {
+  -webkit-appearance: none;
+  border: none;
+  width: 32px;
+  height: 18px;
+  border-radius: 3px;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+}
+
+.option-row input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.option-row input[type="color"]::-webkit-color-swatch {
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 3px;
+}
+
+.option-row select {
+  background: #111133;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.overview-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+}
+
+.summary-stat {
+  background: rgba(10, 10, 34, 0.6);
+  border: 1px solid rgba(68, 68, 255, 0.12);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-stat .label {
+  font-size: 9px;
+  color: #777;
+  letter-spacing: 1px;
+}
+
+.summary-stat .value {
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+}
+
+#overview-rank {
+  color: #00ffff;
+  text-shadow: 0 0 6px rgba(0, 255, 255, 0.3);
+}
+
+#overview-classic-best {
+  color: #ff44aa;
+  text-shadow: 0 0 6px rgba(255, 68, 170, 0.3);
+}
+
+#overview-campaign {
+  color: #ffd700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
+}
+
+/* === STATS TAB === */
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.stat-group-title {
+  font-size: 10px;
+  color: #00ffff;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  margin: 10px 0 6px 0;
+  border-left: 2px solid #00ffff;
+  padding-left: 6px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  font-size: 11px;
+}
+
+.stat-row .label {
+  color: #aaa;
+}
+
+.stat-row .value {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* === ACHIEVEMENTS TAB === */
+.achievements-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10, 10, 34, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px 10px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.achievement-item.locked {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.achievement-icon {
+  font-size: 20px;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.achievement-item.bronze .achievement-icon { border: 1.5px solid #cd7f32; box-shadow: 0 0 6px rgba(205, 127, 50, 0.25); }
+.achievement-item.silver .achievement-icon { border: 1.5px solid #c0c0c0; box-shadow: 0 0 6px rgba(192, 192, 192, 0.25); }
+.achievement-item.gold .achievement-icon { border: 1.5px solid #ffd700; box-shadow: 0 0 6px rgba(255, 215, 0, 0.25); }
+.achievement-item.platinum .achievement-icon { border: 1.5px solid #00ffff; box-shadow: 0 0 6px rgba(0, 255, 255, 0.25); }
+
+.achievement-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.achievement-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.achievement-desc {
+  font-size: 8px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.achievement-item.unlocked .achievement-desc {
+  color: #999;
+}
+
+/* === BADGES TAB === */
+.badges-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.badge-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 10, 34, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.badge-item.equipped {
+  border-color: rgba(255, 165, 0, 0.5);
+  box-shadow: 0 0 10px rgba(255, 165, 0, 0.15);
+}
+
+.badge-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.badge-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-name {
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.badge-item.locked .badge-name {
+  color: #444;
+}
+
+.badge-desc {
+  font-size: 9px;
+  color: #777;
+}
+
+.badge-action {
+  min-width: 90px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.badge-equipped-label {
+  font-size: 9px;
+  font-weight: 900;
+  color: #ffa500;
+  letter-spacing: 1px;
+}
+
+.badge-equip-btn {
+  background: rgba(68, 68, 255, 0.2);
+  border: 1px solid rgba(68, 68, 255, 0.5);
+  border-radius: 4px;
+  color: #88ccff;
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.badge-equip-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  border-color: #00ffff;
+  color: #fff;
+}
+
+.badge-locked-label {
+  font-size: 9px;
+  color: #444;
+  letter-spacing: 1px;
+}
+
+/* === FRIENDS TAB === */
+.friends-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 10px;
+}
+
+.add-friend-section {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+
+#friend-username-input {
+  background: #111133;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  padding: 6px 12px;
+  flex: 1;
+  outline: none;
+}
+
+#friend-username-input:focus {
+  border-color: #00ffff;
+}
+
+.add-friend-section .overlay-btn {
+  width: auto;
+  font-size: 11px;
+  padding: 6px 16px;
+}
+
+.friend-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.friend-subtab {
+  background: transparent;
+  border: none;
+  color: #555;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: color 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.friend-subtab:hover {
+  color: #aaa;
+}
+
+.friend-subtab.active {
+  color: #00ffff;
+  text-shadow: 0 0 6px rgba(0, 255, 255, 0.2);
+}
+
+.friends-content-area {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.friend-subpanel {
+  display: none;
+  width: 100%;
+}
+
+.friend-subpanel.active {
+  display: block;
+}
+
+.friends-list, .requests-list, .social-leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.friend-item, .request-item, .social-lb-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 10, 34, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.friend-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.friend-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.friend-status {
+  font-size: 8px;
+  color: #666;
+}
+
+.remove-friend-btn, .decline-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 51, 51, 0.3);
+  color: #ff5555;
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-friend-btn:hover, .decline-btn:hover {
+  background: rgba(255, 51, 51, 0.15);
+  border-color: #ff3333;
+}
+
+.accept-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 255, 68, 0.3);
+  color: #55ff55;
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 5px;
+}
+
+.accept-btn:hover {
+  background: rgba(0, 255, 68, 0.15);
+  border-color: #00ff44;
+}
+
+.request-actions {
+  display: flex;
+}
+
+.social-lb-entry .lb-score {
+  font-size: 11px;
+}
+
+/* === TOAST NOTIFICATIONS === */
+.toast {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 30, 0.95);
+  border: 1px solid #ffd700;
+  border-radius: 8px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.35);
+  z-index: 99;
+  animation: slideDownToast 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#badge-toast {
+  border-color: #00ffff;
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.35);
+}
+
+.toast.hidden {
+  display: none;
+  opacity: 0;
+  transform: translate(-50%, -30px);
+}
+
+.toast-icon {
+  font-size: 24px;
+}
+
+.toast-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.toast-title {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #888;
+}
+
+#achievement-toast .toast-title { color: #ffd700; }
+#badge-toast .toast-title { color: #00ffff; }
+
+.toast-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+@keyframes slideDownToast {
+  from { transform: translate(-50%, -30px); opacity: 0; }
+  to   { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* === RESPONSIVE OVERRIDES === */
 @media (max-width: 480px) {
-  .overlay-panel {
-    padding: 20px;
+  .profile-panel {
     min-width: unset;
+    height: 95%;
+    max-height: unset;
+    padding: 12px;
   }
-  .overlay-title {
-    font-size: 18px;
+  
+  .profile-tab-btn {
+    font-size: 8px;
+    padding: 6px 4px;
   }
-  .overlay-btn {
-    font-size: 12px;
-    padding: 8px 20px;
+  
+  .overview-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    overflow-y: auto;
+  }
+  
+  .achievements-grid {
+    grid-template-columns: 1fr;
   }
 }
+
