@@ -863,9 +863,17 @@ function checkComboMilestone() {
 function killPlayer(who) {
   if (gs.killedBy) return; // already killed
   gs.killedBy = who || 'p1';
+  
   const tgt = (who === 'p2' && gs.player2) ? gs.player2 : gs.player;
-  tgt.alive = false;
-  if (gs.mode === 'mirror') gs.modeStats.whoDied = who || 'p1';
+  
+  if (gs.mode === 'mirror') {
+    if (gs.player) gs.player.alive = false;
+    if (gs.player2) gs.player2.alive = false;
+    gs.modeStats.whoDied = who || 'p1';
+  } else {
+    gs.player.alive = false;
+  }
+
   emitDeathParticles(tgt.x + tgt.width / 2, tgt.y + tgt.height / 2);
   gs.comboCount = 0;
   gs.screenShake = { active: true, intensity: 8, duration: 400, timer: 0 };
