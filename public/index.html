@@ -19,6 +19,12 @@
   <div id="game-container">
     <canvas id="gameCanvas"></canvas>
 
+    <!-- Floating Menu Buttons -->
+    <div id="floating-menu" class="floating-menu">
+      <button id="profile-menu-btn" class="menu-btn">PROFILE</button>
+      <button id="leaderboard-menu-btn" class="menu-btn">LEADERBOARD</button>
+    </div>
+
     <!-- Leaderboard overlay -->
     <div id="leaderboard-overlay" class="overlay hidden">
       <div class="overlay-panel">
@@ -36,6 +42,168 @@
         <input type="text" id="player-name-input" maxlength="16" placeholder="Your name..." autocomplete="off" />
         <button class="overlay-btn" id="submit-score-btn">SUBMIT</button>
         <button class="overlay-btn secondary" id="skip-score-btn">SKIP</button>
+      </div>
+    </div>
+
+    <!-- Profile Overlay -->
+    <div id="profile-overlay" class="overlay hidden">
+      <div class="overlay-panel profile-panel">
+        <div class="profile-header">
+          <div class="profile-title-container">
+            <span class="active-badge-tag" id="profile-active-badge-tag">NO BADGE</span>
+            <h2 class="overlay-title" id="profile-username-title">RUNNER_XXXXXX</h2>
+            <div id="edit-username-container" class="hidden">
+              <input type="text" id="edit-username-input" maxlength="16" placeholder="Username..." />
+              <button class="small-btn" id="save-username-btn">SAVE</button>
+            </div>
+            <button class="edit-btn" id="edit-username-btn">EDIT</button>
+          </div>
+          <button class="close-icon-btn" id="close-profile">&times;</button>
+        </div>
+
+        <div class="profile-tabs">
+          <button class="profile-tab-btn active" data-tab="overview">OVERVIEW</button>
+          <button class="profile-tab-btn" data-tab="stats">STATS</button>
+          <button class="profile-tab-btn" data-tab="achievements">ACHIEVEMENTS</button>
+          <button class="profile-tab-btn" data-tab="badges">BADGES</button>
+          <button class="profile-tab-btn" data-tab="friends">FRIENDS</button>
+        </div>
+
+        <div class="profile-content">
+          <!-- Overview Tab -->
+          <div class="tab-panel active" id="tab-overview">
+            <div class="overview-grid">
+              <div class="avatar-customizer">
+                <div class="avatar-preview-container">
+                  <canvas id="avatarCanvas" width="80" height="80"></canvas>
+                </div>
+                <div class="customizer-options">
+                  <div class="option-row">
+                    <label>Helmet</label>
+                    <input type="color" id="color-helmet" value="#ffffff" />
+                  </div>
+                  <div class="option-row">
+                    <label>Visor</label>
+                    <input type="color" id="color-visor" value="#88ccff" />
+                  </div>
+                  <div class="option-row">
+                    <label>Suit</label>
+                    <input type="color" id="color-suit" value="#ffffff" />
+                  </div>
+                  <div class="option-row">
+                    <label>Accent</label>
+                    <input type="color" id="color-accent" value="#00ffff" />
+                  </div>
+                  <div class="option-row">
+                    <label>Emblem</label>
+                    <select id="select-emblem">
+                      <option value="star">Star</option>
+                      <option value="orb">Orb</option>
+                      <option value="cross">Cross</option>
+                      <option value="delta">Delta</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="overview-summary">
+                <div class="summary-stat">
+                  <span class="label">GLOBAL RANK</span>
+                  <span class="value" id="overview-rank">#99+</span>
+                </div>
+                <div class="summary-stat">
+                  <span class="label">CLASSIC BEST</span>
+                  <span class="value" id="overview-classic-best">0</span>
+                </div>
+                <div class="summary-stat">
+                  <span class="label">CAMPAIGN</span>
+                  <span class="value" id="overview-campaign">W1 (0/15 ★)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Tab -->
+          <div class="tab-panel" id="tab-stats">
+            <div class="stats-list">
+              <div class="stat-group-title">PERSONAL RECORDS</div>
+              <div class="stat-row"><span class="label">Classic Score</span><span class="value" id="stats-classic-score">0</span></div>
+              <div class="stat-row"><span class="label">Mirror Score</span><span class="value" id="stats-mirror-score">0</span></div>
+              <div class="stat-row"><span class="label">Blitz Score</span><span class="value" id="stats-blitz-score">0</span></div>
+              
+              <div class="stat-group-title">LIFETIME STATS</div>
+              <div class="stat-row"><span class="label">Games Played</span><span class="value" id="stats-total-games">0</span></div>
+              <div class="stat-row"><span class="label">Total Playtime</span><span class="value" id="stats-playtime">0s</span></div>
+              <div class="stat-row"><span class="label">Total Flips</span><span class="value" id="stats-flips">0</span></div>
+              <div class="stat-row"><span class="label">Stars Collected</span><span class="value" id="stats-stars">0</span></div>
+              <div class="stat-row"><span class="label">Distance Traveled</span><span class="value" id="stats-distance">0m</span></div>
+              <div class="stat-row"><span class="label">Total Deaths</span><span class="value" id="stats-deaths">0</span></div>
+            </div>
+          </div>
+
+          <!-- Achievements Tab -->
+          <div class="tab-panel" id="tab-achievements">
+            <div class="achievements-grid" id="achievements-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Badges Tab -->
+          <div class="tab-panel" id="tab-badges">
+            <div class="badges-list" id="badges-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Friends Tab -->
+          <div class="tab-panel" id="tab-friends">
+            <div class="friends-layout">
+              <div class="add-friend-section">
+                <input type="text" id="friend-username-input" maxlength="16" placeholder="Enter runner username..." autocomplete="off" />
+                <button class="overlay-btn" id="add-friend-btn">ADD FRIEND</button>
+              </div>
+              <div class="friend-tabs">
+                <button class="friend-subtab active" data-subtab="list">FRIENDS</button>
+                <button class="friend-subtab" data-subtab="requests">REQUESTS (<span id="requests-count">0</span>)</button>
+                <button class="friend-subtab" data-subtab="leaderboard">SOCIAL BOARD</button>
+              </div>
+              <div class="friends-content-area">
+                <div class="friend-subpanel active" id="friend-subpanel-list">
+                  <div class="friends-list" id="friends-list-container">
+                    <!-- Dynamically populated -->
+                  </div>
+                </div>
+                <div class="friend-subpanel" id="friend-subpanel-requests">
+                  <div class="requests-list" id="requests-list-container">
+                    <!-- Dynamically populated -->
+                  </div>
+                </div>
+                <div class="friend-subpanel" id="friend-subpanel-leaderboard">
+                  <div class="social-leaderboard-list" id="social-leaderboard-container">
+                    <!-- Dynamically populated -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievement Unlock Toast -->
+    <div id="achievement-toast" class="toast hidden">
+      <div class="toast-icon">🏆</div>
+      <div class="toast-info">
+        <span class="toast-title">ACHIEVEMENT UNLOCKED!</span>
+        <span class="toast-name" id="achievement-toast-name">First Step</span>
+      </div>
+    </div>
+
+    <!-- Badge Unlock Toast -->
+    <div id="badge-toast" class="toast hidden">
+      <div class="toast-icon">🎖️</div>
+      <div class="toast-info">
+        <span class="toast-title">BADGE UNLOCKED!</span>
+        <span class="toast-name" id="badge-toast-name">Lucky Escape</span>
       </div>
     </div>
 
