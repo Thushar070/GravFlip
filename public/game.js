@@ -2336,11 +2336,32 @@ document.addEventListener('keydown', (e) => {
 cvs.addEventListener('touchstart', (e) => {
   e.preventDefault();
   touchStartX = e.touches[0].clientX;
+  if (gs.screen === 'dead') {
+    const { mx, my } = getCanvasCoords(e);
+    const bounds = getScrubberBounds();
+    if (mx >= bounds.x && mx <= bounds.x + bounds.w && my >= bounds.y && my <= bounds.y + bounds.h) {
+      gs.isScrubbing = true;
+      updateScrubPosition(mx);
+      return;
+    }
+  }
   if (gs.screen !== 'modeselect') handleInput(e);
+}, { passive: false });
+
+cvs.addEventListener('touchmove', (e) => {
+  if (gs.screen === 'dead' && gs.isScrubbing) {
+    e.preventDefault();
+    const { mx } = getCanvasCoords(e);
+    updateScrubPosition(mx);
+  }
 }, { passive: false });
 
 cvs.addEventListener('touchend', (e) => {
   e.preventDefault();
+  if (gs.isScrubbing) {
+    gs.isScrubbing = false;
+    return;
+  }
   if (gs.screen === 'modeselect') {
     const dx = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(dx) > 50) {
@@ -2352,7 +2373,32 @@ cvs.addEventListener('touchend', (e) => {
   }
 }, { passive: false });
 
-cvs.addEventListener('mousedown', (e) => { e.preventDefault(); handleInput(e); });
+cvs.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  if (gs.screen === 'dead') {
+    const { mx, my } = getCanvasCoords(e);
+    const bounds = getScrubberBounds();
+    if (mx >= bounds.x && mx <= bounds.x + bounds.w && my >= bounds.y && my <= bounds.y + bounds.h) {
+      gs.isScrubbing = true;
+      updateScrubPosition(mx);
+      return;
+    }
+  }
+  handleInput(e);
+});
+
+cvs.addEventListener('mousemove', (e) => {
+  if (gs.screen === 'dead' && gs.isScrubbing) {
+    const { mx } = getCanvasCoords(e);
+    updateScrubPosition(mx);
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (gs.isScrubbing) {
+    gs.isScrubbing = false;
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════
 //  UPDATE FUNCTIONS
