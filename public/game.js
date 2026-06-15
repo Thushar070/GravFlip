@@ -3274,13 +3274,14 @@ function drawPlayer2() {
 }
 
 function drawParticles() {
+  ctx.save();
   for (let i = 0; i < gs.particles.length; i++) {
     const pt = gs.particles[i];
     ctx.globalAlpha = pt.life / pt.maxLife;
     ctx.fillStyle = pt.color;
     ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2); ctx.fill();
   }
-  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 function drawStarbursts() {
