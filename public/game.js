@@ -1769,14 +1769,15 @@ function flipGravity() {
   const p = gs.player;
   p.squishTimer = PLAYER_CFG.SQUISH_FRAMES;
   p.squishDirection = gs.gravityFlipped ? -1 : 1;
-  p.vy = gs.gravityFlipped ? PHYSICS.JUMP_FORCE : -PHYSICS.JUMP_FORCE;
+  p.vy = gs.gravityFlipped ? getJumpForce() : -getJumpForce();
   p.grounded = false;
 
-  if (gs.mode === 'mirror' && gs.player2 && gs.player2.alive) {
+  const isMirror = gs.mode === 'mirror' || (gs.mode === 'daily' && gs.daily?.mode === 'mirror');
+  if (isMirror && gs.player2 && gs.player2.alive) {
     const p2 = gs.player2;
     p2.squishTimer = PLAYER_CFG.SQUISH_FRAMES;
     p2.squishDirection = gs.gravityFlipped ? 1 : -1;
-    p2.vy = gs.gravityFlipped ? -PHYSICS.JUMP_FORCE : PHYSICS.JUMP_FORCE;
+    p2.vy = gs.gravityFlipped ? -getJumpForce() : getJumpForce();
     p2.grounded = false;
     gs.modeStats.syncFlips++;
   }
