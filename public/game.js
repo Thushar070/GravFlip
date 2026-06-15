@@ -5156,6 +5156,10 @@ function drawDeathScreen() {
   ctx.font = '11px Orbitron, monospace';
   if (gs.mode === 'campaign' && gs.campaign) {
     ctx.fillText('Retries: ' + gs.campaign.deathCount, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.52);
+  } else if (gs.mode === 'daily') {
+    const secs = Math.floor(gs.modeStats.playTimeMs / 1000);
+    const modName = gs.daily?.modifierName || 'None';
+    ctx.fillText('Modifier: ' + modName + '  \u2502  Survived ' + secs + 's  \u2502  Stars: ' + gs.modeStats.starsCollected, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.52);
   } else if (gs.mode === 'classic') {
     const secs = Math.floor(gs.modeStats.playTimeMs / 1000);
     ctx.fillText('Survived ' + secs + 's  \u2502  Stars: ' + gs.modeStats.starsCollected, DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.52);
