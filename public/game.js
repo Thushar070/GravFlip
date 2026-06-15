@@ -58,6 +58,7 @@ const API = {
 
   async init() {
     await fetchDailyChallenge();
+    fetchRecentScoresForTicker().catch(() => {});
     // Try localStorage first (persist session across refreshes)
     try {
       this.sessionId = localStorage.getItem('gravflip_session');
