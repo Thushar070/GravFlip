@@ -630,6 +630,7 @@ const ProfileUI = {
       if (input) input.addEventListener('input', drawAndSave);
     });
     if (this.selectEmblem) this.selectEmblem.addEventListener('change', drawAndSave);
+    if (this.selectSeasonalTheme) this.selectSeasonalTheme.addEventListener('change', drawAndSave);
 
     // Friends Subtabs
     this.friendSubtabs.forEach(btn => {
