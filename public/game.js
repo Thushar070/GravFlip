@@ -2299,7 +2299,7 @@ cvs.addEventListener('touchend', (e) => {
   if (gs.screen === 'modeselect') {
     const dx = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(dx) > 50) {
-      if (dx < 0 && gs.modeSelectIndex < 3) gs.modeSelectIndex++;
+      if (dx < 0 && gs.modeSelectIndex < 4) gs.modeSelectIndex++;
       else if (dx > 0 && gs.modeSelectIndex > 0) gs.modeSelectIndex--;
     } else {
       confirmModeSelection();
