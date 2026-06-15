@@ -3031,21 +3031,75 @@ function drawEngineGlow(p, isP2) {
   if (flameBelow) { ey = p.y + p.height; dir = 1; }
   else { ey = p.y; dir = -1; }
 
-  const flickerH = 6 + (Math.random() * 6 - 3);
-  const flashMult = gs.engineFlashTimer > 0 ? 2 : 1;
-  const h = Math.abs(flickerH) * flashMult;
+  // 1. Calculate dynamic flickering dimensions
+  const flicker = 0.85 + 0.3 * Math.random();
+  const baseH = 9 + 3 * Math.sin(gs.frameCount * 0.3);
+  const flashMult = gs.engineFlashTimer > 0 ? 2.5 : 1.0;
+  const h = baseH * flashMult * flicker;
+  const w = 4.5 * flashMult;
 
-  const colors = isP2
-    ? ['rgba(255,68,170,0.6)', 'rgba(255,150,200,0.4)', 'rgba(255,255,255,0.3)']
-    : ['rgba(255,136,0,0.6)', 'rgba(255,221,0,0.4)', 'rgba(255,255,255,0.3)'];
-  const widths = [5, 3.5, 2];
+  // Colors based on player index
+  const outerColor = isP2 ? 'rgba(255, 68, 170, 0.45)' : 'rgba(255, 120, 0, 0.45)';
+  const innerColor = isP2 ? '#ffaadd' : '#ffdd00';
+  const glowColor = isP2 ? COLORS.NEON_PINK : '#ffaa00';
 
-  for (let i = 0; i < 3; i++) {
-    ctx.fillStyle = colors[i];
+  // 2. Draw Outer Flame (wide, soft glow)
+  ctx.save();
+  ctx.shadowBlur = 12 * flashMult;
+  ctx.shadowColor = glowColor;
+  ctx.fillStyle = outerColor;
+  
+  ctx.beginPath();
+  ctx.moveTo(cx - w, ey);
+  ctx.quadraticCurveTo(cx - w * 0.4, ey + dir * h * 0.4, cx, ey + dir * h);
+  ctx.quadraticCurveTo(cx + w * 0.4, ey + dir * h * 0.4, cx + w, ey);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 3. Draw Inner Flame Core (white-hot center)
+  ctx.save();
+  ctx.shadowBlur = 4;
+  ctx.shadowColor = '#ffffff';
+  ctx.fillStyle = '#ffffff';
+  
+  const innerW = w * 0.45;
+  const innerH = h * 0.6;
+  ctx.beginPath();
+  ctx.moveTo(cx - innerW, ey);
+  ctx.quadraticCurveTo(cx - innerW * 0.4, ey + dir * innerH * 0.4, cx, ey + dir * innerH);
+  ctx.quadraticCurveTo(cx + innerW * 0.4, ey + dir * innerH * 0.4, cx + innerW, ey);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 4. Exhaust sparks
+  ctx.save();
+  ctx.fillStyle = innerColor;
+  ctx.globalAlpha = 0.6;
+  for (let s = 1; s <= 3; s++) {
+    const sparkOffset = (gs.frameCount * 2.5 + s * 8) % 20;
+    const sparkX = cx + Math.sin(gs.frameCount * 0.15 + s) * 2.2;
+    const sparkY = ey + dir * (h * 0.4 + sparkOffset);
+    const sparkRadius = Math.max(0.5, 1.8 * (1 - sparkOffset / 20));
     ctx.beginPath();
-    ctx.ellipse(cx, ey + dir * h * (0.3 + i * 0.2), widths[i], h * (1 - i * 0.25), 0, 0, Math.PI * 2);
+    ctx.arc(sparkX, sparkY, sparkRadius, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.restore();
+
+  // 5. Nozzle shock diamond glow during flip flash
+  if (gs.engineFlashTimer > 0) {
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(cx, ey, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   ctx.restore();
 }
 
