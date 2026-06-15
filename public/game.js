@@ -2658,12 +2658,22 @@ function updateStarfield(dt) {
     s.x -= s.speed * spd * dt;
     s.phase += s.twinkleSpeed * dt;
     
+    if (gs.theme === 'winter_neon') {
+      s.y += (0.5 + s.speed * 0.25) * dt;
+      if (s.y > DISPLAY.HEIGHT) {
+        s.y = 0;
+        s.x = Math.random() * DISPLAY.WIDTH;
+      }
+    }
+    
     // Smooth cosine-based brightness twinkling
     s.brightness = Math.max(0.08, Math.min(1.0, s.baseBrightness + 0.15 * Math.sin(s.phase)));
     
     if (s.x < 0) {
       s.x = DISPLAY.WIDTH;
-      s.y = Math.random() * DISPLAY.HEIGHT;
+      if (gs.theme !== 'winter_neon') {
+        s.y = Math.random() * DISPLAY.HEIGHT;
+      }
     }
   }
 }
