@@ -2118,24 +2118,100 @@ function drawObstacles() {
         ctx.restore();
       } else {
         const glow = 8 + 4 * Math.sin(o.glowPhase);
-        ctx.shadowBlur = glow; ctx.shadowColor = glowColor;
-        ctx.fillStyle = obsColor;
-        ctx.fillRect(o.x, o.y, o.width, o.height);
         
+        // 1. Draw base block with vertical tech gradient
+        ctx.save();
+        const blockGrd = ctx.createLinearGradient(o.x, o.y, o.x, o.y + o.height);
+        blockGrd.addColorStop(0, glowColor);
+        blockGrd.addColorStop(0.25, obsColor);
+        blockGrd.addColorStop(1, 'rgba(15, 15, 40, 0.95)');
+        ctx.fillStyle = blockGrd;
+        
+        roundRect(ctx, o.x, o.y, o.width, o.height, 4);
+        ctx.fill();
+        
+        ctx.strokeStyle = glowColor;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+        
+        // 2. Draw diagonal hazard stripes on the block body
+        ctx.save();
+        ctx.beginPath();
+        roundRect(ctx, o.x, o.y, o.width, o.height, 4);
+        ctx.clip();
+        
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.lineWidth = 5;
+        const stripeSpacing = 14;
+        for (let sx = o.x - o.height; sx < o.x + o.width; sx += stripeSpacing) {
+          ctx.beginPath();
+          ctx.moveTo(sx, o.y + o.height);
+          ctx.lineTo(sx + o.height, o.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // 3. Draw glowing spikes on the leading edge (outer neon glow)
+        const sH = 10;
+        const sW = o.width / 4;
+        
+        ctx.save();
+        ctx.shadowBlur = glow * 1.5;
+        ctx.shadowColor = glowColor;
         ctx.fillStyle = glowColor;
-        const sH = 8, sW = o.width / 4;
         if (o.fromFloor) {
           for (let s = 0; s < 4; s++) {
             const sx = o.x + s * sW;
-            ctx.beginPath(); ctx.moveTo(sx, o.y); ctx.lineTo(sx + sW / 2, o.y - sH); ctx.lineTo(sx + sW, o.y); ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(sx, o.y);
+            ctx.lineTo(sx + sW / 2, o.y - sH);
+            ctx.lineTo(sx + sW, o.y);
+            ctx.closePath();
+            ctx.fill();
           }
         } else {
           const bot = o.y + o.height;
           for (let s = 0; s < 4; s++) {
             const sx = o.x + s * sW;
-            ctx.beginPath(); ctx.moveTo(sx, bot); ctx.lineTo(sx + sW / 2, bot + sH); ctx.lineTo(sx + sW, bot); ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(sx, bot);
+            ctx.lineTo(sx + sW / 2, bot + sH);
+            ctx.lineTo(sx + sW, bot);
+            ctx.closePath();
+            ctx.fill();
           }
         }
+        ctx.restore();
+
+        // 4. Spikes inner white-hot core
+        ctx.save();
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = '#ffffff';
+        ctx.fillStyle = '#ffffff';
+        if (o.fromFloor) {
+          for (let s = 0; s < 4; s++) {
+            const sx = o.x + s * sW;
+            ctx.beginPath();
+            ctx.moveTo(sx + sW * 0.15, o.y);
+            ctx.lineTo(sx + sW / 2, o.y - sH * 0.7);
+            ctx.lineTo(sx + sW * 0.85, o.y);
+            ctx.closePath();
+            ctx.fill();
+          }
+        } else {
+          const bot = o.y + o.height;
+          for (let s = 0; s < 4; s++) {
+            const sx = o.x + s * sW;
+            ctx.beginPath();
+            ctx.moveTo(sx + sW * 0.15, bot);
+            ctx.lineTo(sx + sW / 2, bot + sH * 0.7);
+            ctx.lineTo(sx + sW * 0.85, bot);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+        ctx.restore();
       }
     } else if (o.type === 'laser') {
       ctx.save();
