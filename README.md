@@ -1,70 +1,140 @@
-# GravFlip Runner
+<div align="center">
+
+# 🚀 GRAVFLIP RUNNER
+
+**Flip gravity. Dodge obstacles. Survive.**
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Thushar070/GravFlip)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](#)
+[![Built With](https://img.shields.io/badge/Built_With-Vanilla_JS_+_Node.js-f7df1e.svg)](#)
+
+</div>
+
+---
+
+## 📖 About
 
 GravFlip Runner is a fast-paced, neon-infused anti-gravity platformer where survival depends on your ability to manipulate gravity. Instead of jumping, you flip gravity to traverse floors and ceilings, dodging hazardous obstacles, collecting stars, and testing your reflexes in an ever-accelerating deep space environment.
 
----
+This is an original web game built from scratch without any heavy frameworks. It utilizes the HTML5 Canvas API for high-performance rendering and the Web Audio API for dynamic procedural sound generation. 
 
-## Game Features
-
-### Diverse Game Modes
-- **Classic**: The original survival challenge. Survive as long as you can, score points, and aim for a high score.
-- **Mirror**: Control two astronauts simultaneously on a split screen. If either player crashes, it is game over!
-- **Blitz**: An intense mode where the speed increases rapidly and never slows down. Designed for veteran players.
-- **Campaign**: A 5-world story mode containing unique hazards and progression tracking:
-  - **World 1 (Void)**: An introduction to basic gravity flipping.
-  - **World 2 (City)**: Dodge security drones monitoring the center path.
-  - **World 3 (Belt)**: Navigate an asteroid field of rotating hazards.
-  - **World 4 (Flare)**: Escape high-temperature solar heat pulses and firewaves.
-  - **World 5 (Singularity)**: Survive near a black hole where gravity inversion zones automatically flip your gravity and temporarily disable manual control.
-
-### Dynamic Obstacles
-- **Laser Gates**: Timing-based barriers that cycle between safe, warning, and lethal states.
-- **Crushers**: Moving industrial blocks shifting vertically from floor to ceiling.
-- **Phantom Blocks**: Glitching obstacles that may solidfy or let you pass through safely.
-- **Saw Blades**: Spinning, floating saws that bob up and down to cut off your path.
-
-### Immersive Audio & Visuals
-- Smooth visual theme transitions as you reach higher zones.
-- Premium retro synth sound effects for actions, collections, and crashes.
-- Interactive starfields, nebulas, and custom lighting animations.
+It is designed to be a fully production-ready, highly polished browser game with an architecture that supports offline play as well as competitive global leaderboards.
 
 ---
 
-## How to Run the Game
+## 🎮 Game Modes
 
-### 1. Clone the Repository
-Open your terminal and run the following command to clone the project:
+| Mode | Description |
+| :--- | :--- |
+| **CLASSIC** | The original survival challenge. Survive as long as you can, score points, and aim for a global high score. |
+| **MIRROR** | Control two astronauts simultaneously on a split screen. If either player crashes, it is game over for both! |
+| **BLITZ** | An intense mode where the speed increases rapidly and never slows down. Designed for veteran players. |
+| **CAMPAIGN** | A 5-world story mode containing unique hazards, visual themes, and progression tracking. |
 
-```bash
-git clone https://github.com/Thushar070/GravFlip.git
+---
+
+## ✨ Features
+
+- 🌌 **5 Campaign Worlds** — Handcrafted challenges including Neon City, Asteroid Belt, Solar Flare, and The Singularity.
+- 🎨 **Dynamic Visual Themes** — Transitions smoothly between Deep Space, Neon Grid, Crimson Void, and Aurora.
+- ☠️ **Obstacle Types** — Avoid Laser Gates, Crushers, Phantom Blocks, and rotating Saw Blades.
+- 🎵 **Web Audio API** — Fully procedural 8-bit / synthwave sound design, no external audio files required.
+- 🏆 **Global Leaderboard** — Compete for the #1 spot powered by Vercel KV Redis.
+- 🛡️ **Anti-Cheat Engine** — 5-layer server-side validation to ensure all submitted scores are physically possible.
+- 📱 **Mobile Optimized** — Scales perfectly with touch controls, blocked zooming, and iOS bounce scroll prevention.
+
+---
+
+## 🕹️ How to Play
+
+1. **Flip Gravity:** Press the `Spacebar` or `Tap` the screen to flip your gravity between the floor and ceiling.
+2. **Dodge:** Avoid all incoming obstacles. Grazing an obstacle triggers a split-second "Coyote Time" window to escape.
+3. **Collect:** Gather stars for bonus points. Collecting stars consecutively builds your combo multiplier.
+4. **Survive:** Last as long as you can! The game speed gradually increases as you clear zones.
+
+---
+
+## 🚀 Deploy Your Own
+
+You can deploy your own instance of GravFlip Runner in minutes using Vercel.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Thushar070/GravFlip)
+
+### Manual Setup
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Thushar070/GravFlip.git
+   cd GravFlip
+   ```
+2. **Set up the Database:**
+   - Create a Vercel KV (Redis) database in your Vercel dashboard.
+   - Copy `.env.example` to `.env` and fill in your credentials.
+3. **Run locally:**
+   ```bash
+   npm install
+   npm run dev
+   ```
+4. **Deploy:**
+   ```bash
+   npx vercel deploy --prod
+   ```
+
+---
+
+## 🏗️ Architecture
+
+```text
+       Browser (Client)
+             │
+             ▼ (HTTPS POST /api/scores)
+    ┌─────────────────┐
+    │ Vercel Edge API │  ◄── Rate Limiting (lib/rateLimit.js)
+    └────────┬────────┘
+             │           ◄── Score Validation Engine (lib/scoreValidator.js)
+             ▼
+    ┌─────────────────┐
+    │ Vercel KV Redis │  ◄── Leaderboard & Sessions (lib/db.js)
+    └─────────────────┘
 ```
 
-### 2. Navigate to the Directory
-Go into the project folder:
+---
 
-```bash
-cd GravFlip
+## 🛡️ Anti-Cheat Engine
+
+GravFlip Runner employs a robust backend validation engine to keep the leaderboards clean:
+1. **Token Integrity:** Uses SHA-256 HMAC-style signing to prevent payload tampering.
+2. **Physics Plausibility:** Verifies the score mathematically matches the survival time and combo rate.
+3. **Frame Rate Check:** Ensures the frame count correlates closely with the real-world timestamp.
+4. **Speed Validation:** Confirms the final game speed matches the theoretical acceleration curve.
+5. **Session Banning:** Flags and permanently bans anonymous sessions that submit impossible data.
+
+---
+
+## 📁 Project Structure
+
+```text
+gravflip-runner/
+├── public/                 # Static frontend assets served to the browser
+│   ├── index.html          # Main HTML layout and UI overlays
+│   ├── style.css           # Modern neon styling and animations
+│   └── game.js             # Core 60fps canvas game engine and API client
+├── api/                    # Vercel Serverless Functions
+│   ├── auth.js             # Anonymous session creation
+│   ├── scores.js           # Read/Write for global leaderboards
+│   └── verify.js           # Debug endpoint for token validation
+├── lib/                    # Shared backend utilities
+│   ├── db.js               # Vercel KV Redis database wrapper
+│   ├── rateLimit.js        # IP-based API rate limiting
+│   └── scoreValidator.js   # Physics-based anti-cheat engine
+├── vercel.json             # Vercel routing and security headers
+└── package.json            # Scripts and dependencies
 ```
 
-### 3. Run the Game
+---
 
-The project has been upgraded to a full-stack structure with a `public` folder for the frontend and an `api` folder for the serverless backend.
+## 👨‍💻 Credits
 
-#### Install Dependencies
-```bash
-npm install
-```
+Created by **Thushar TL**
+Computer Science, SSN College of Engineering, Chennai.
 
-#### Run Locally (Frontend only - Offline Mode)
-```bash
-npm start
-```
-This runs the game using `npx serve public -l 3000`. The game will gracefully run in offline mode without the backend. Open **http://localhost:3000**.
-
-#### Run Full-Stack (Requires Vercel & KV)
-```bash
-cp .env.example .env
-# Add your Vercel KV credentials to .env
-npm run dev
-```
-This uses `vercel dev` to run the backend APIs and serve the frontend simultaneously.
+[GitHub Profile](https://github.com/Thushar070)
