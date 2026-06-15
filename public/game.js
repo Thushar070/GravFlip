@@ -12,7 +12,11 @@ const API = {
     try {
       this.sessionId = localStorage.getItem('gravflip_session');
     } catch (e) {}
-    if (this.sessionId) { this._ready = true; return; }
+    if (this.sessionId) { 
+      this._ready = true; 
+      await fetchClientProfileOnBoot();
+      return; 
+    }
     try {
       const res = await fetch('/api/auth', { method: 'POST' });
       if (res.ok) {
@@ -25,7 +29,50 @@ const API = {
       this.sessionId = 'offline_' + Math.random().toString(36).substring(2);
     }
     this._ready = true;
+    await fetchClientProfileOnBoot();
   },
+};
+
+async function fetchClientProfileOnBoot() {
+  try {
+    let profileId = localStorage.getItem('gravflip_profile_id');
+    let url = '/api/profile/me';
+    if (profileId) {
+      url += `?id=${profileId}`;
+    }
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      clientProfile = data.profile;
+      if (clientProfile && clientProfile.id) {
+        localStorage.setItem('gravflip_profile_id', clientProfile.id);
+        if (window.ProfileUI && window.ProfileUI.init) {
+          window.ProfileUI.init();
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load profile on boot:', e);
+  }
+  
+  if (!clientProfile) {
+    clientProfile = {
+      id: 'local_runner',
+      username: 'Offline_Runner',
+      avatar: { helmet: '#ffffff', visor: '#88ccff', suit: '#ffffff', accent: '#00ffff', emblem: 'star' },
+      stats: { totalPlayTimeMs: 0, totalFlips: 0, totalStarsCollected: 0, totalDistanceTraveled: 0, deaths: 0, gamesPlayed: { classic: 0, mirror: 0, blitz: 0, campaign: 0 } },
+      records: { classic: { score: 0, distance: 0 }, mirror: { score: 0, distance: 0 }, blitz: { score: 0, distance: 0 } },
+      campaign: { currentWorld: 1, starsPerWorld: [0, 0, 0, 0, 0], completed: false },
+      achievements: [],
+      badges: [],
+      friends: [],
+      friendRequestsSent: [],
+      friendRequestsReceived: []
+    };
+    if (window.ProfileUI && window.ProfileUI.init) {
+      window.ProfileUI.init();
+    }
+  }
 
   async getLeaderboard() {
     try {
