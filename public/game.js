@@ -3057,21 +3057,100 @@ function drawPlayerShape(p, bodyColor, visorColor, isFlipped, hasCoyote) {
   if (p.squishTimer > 0) { const t = p.squishTimer / PLAYER_CFG.SQUISH_FRAMES; scaleY = 0.6 + 0.4 * (1 - t); }
   ctx.translate(cx, cy); ctx.scale(1, scaleY); ctx.translate(-cx, -cy);
 
-  if (hasCoyote && gs.coyoteTimer > 0) { ctx.shadowBlur = 16; ctx.shadowColor = '#ff8800'; }
-  else { ctx.shadowBlur = 8; ctx.shadowColor = bodyColor; }
+  // Coyote time warning glow or regular glow
+  if (hasCoyote && gs.coyoteTimer > 0) {
+    ctx.shadowBlur = 18; ctx.shadowColor = '#ff8800';
+  } else {
+    ctx.shadowBlur = 10; ctx.shadowColor = bodyColor;
+  }
 
-  const bx = p.x, by = p.y, bw = p.width, bh = p.height, r = 5;
-  ctx.fillStyle = bodyColor;
-  roundRect(ctx, bx, by, bw, bh, r); ctx.fill();
+  const bx = p.x, by = p.y, bw = p.width, bh = p.height, r = 6;
+  const isP2 = (bodyColor === COLORS.NEON_PINK);
+  const glowColor = isP2 ? COLORS.NEON_PINK : COLORS.NEON_CYAN;
+  
+  // 1. Draw Backpack / Life Support Tank
+  ctx.save();
+  ctx.fillStyle = '#222233';
+  ctx.strokeStyle = '#444455';
+  ctx.lineWidth = 1;
+  roundRect(ctx, bx - 3, by + bh * 0.2, 4, bh * 0.6, 2);
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+  
+  // 2. Draw Space Suit Body
+  ctx.save();
+  const suitGrd = ctx.createLinearGradient(bx, by, bx, by + bh);
+  if (bodyColor === COLORS.PLAYER) {
+    suitGrd.addColorStop(0, '#ffffff');
+    suitGrd.addColorStop(0.6, '#e0e0f0');
+    suitGrd.addColorStop(1, '#a0a0c0');
+  } else {
+    suitGrd.addColorStop(0, bodyColor);
+    suitGrd.addColorStop(1, '#33001a');
+  }
+  ctx.fillStyle = suitGrd;
+  roundRect(ctx, bx, by, bw, bh, r);
+  ctx.fill();
+  
+  // Suit outline for extra resolution
+  ctx.strokeStyle = '#222233';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.restore();
 
-  ctx.shadowBlur = 4; ctx.shadowColor = visorColor; ctx.fillStyle = visorColor;
-  const vw = bw * 0.55, vh = bh * 0.3, vx = bx + bw * 0.3, vy = by + bh * 0.25, vr = 3;
-  roundRect(ctx, vx, vy, vw, vh, vr); ctx.fill();
+  // 3. Draw Suit Details (Belt, Collar, Glowing chest stripe)
+  ctx.save();
+  ctx.fillStyle = '#22223e';
+  ctx.fillRect(bx + 2, by + bh * 0.42, bw - 4, 2); // Collar
+  ctx.fillRect(bx + 1, by + bh * 0.72, bw - 2, 2.5); // Belt
+  
+  ctx.fillStyle = glowColor;
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = glowColor;
+  ctx.fillRect(bx + bw * 0.15, by + bh * 0.52, bw * 0.35, 2); // Chest light
+  ctx.restore();
 
-  ctx.shadowBlur = 0; ctx.fillStyle = COLORS.NEON_CYAN;
+  // 4. Draw Helmet Visor
+  ctx.save();
+  const vw = bw * 0.6, vh = bh * 0.32, vx = bx + bw * 0.3, vy = by + bh * 0.18, vr = 4;
+  
+  // Base dark visor glass
+  ctx.fillStyle = '#0a0d14';
+  roundRect(ctx, vx, vy, vw, vh, vr);
+  ctx.fill();
+  
+  // Visor colored neon tint glow
+  ctx.save();
+  ctx.globalAlpha = 0.6;
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = visorColor;
+  ctx.fillStyle = visorColor;
+  roundRect(ctx, vx + 0.8, vy + 0.8, vw - 1.6, vh - 1.6, vr - 1);
+  ctx.fill();
+  ctx.restore();
+
+  // Specular glossy reflection shine
+  ctx.save();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+  ctx.beginPath();
+  ctx.moveTo(vx + 2, vy);
+  ctx.lineTo(vx + vw * 0.4, vy);
+  ctx.lineTo(vx + vw * 0.12, vy + vh);
+  ctx.lineTo(vx, vy + vh);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  ctx.restore();
+
+  // 5. Draw Helmet Antennae
+  ctx.save();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = glowColor;
   const antY = isFlipped ? by + bh + 3 : by - 3;
   ctx.beginPath(); ctx.arc(bx + bw * 0.35, antY, 2, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(bx + bw * 0.65, antY, 2, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  
   ctx.restore();
 }
 
