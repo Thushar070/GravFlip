@@ -575,6 +575,7 @@ const ProfileUI = {
     this.colorSuit = document.getElementById('color-suit');
     this.colorAccent = document.getElementById('color-accent');
     this.selectEmblem = document.getElementById('select-emblem');
+    this.selectSeasonalTheme = document.getElementById('select-seasonal-theme');
 
     // Friends inputs
     this.friendInput = document.getElementById('friend-username-input');
