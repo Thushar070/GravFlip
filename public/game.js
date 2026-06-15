@@ -109,6 +109,122 @@ async function fetchClientProfileOnBoot() {
   }
 }
 
+async function updateProfileStatsAfterRun() {
+  if (!clientProfile) return;
+
+  const runStats = gs.modeStats;
+  const mode = gs.mode;
+
+  // 1. Update overall stats
+  const updatedStats = {
+    totalPlayTimeMs: (clientProfile.stats.totalPlayTimeMs || 0) + runStats.playTimeMs,
+    totalFlips: (clientProfile.stats.totalFlips || 0) + (runStats.flips || 0),
+    totalStarsCollected: (clientProfile.stats.totalStarsCollected || 0) + runStats.starsCollected,
+    totalDistanceTraveled: (clientProfile.stats.totalDistanceTraveled || 0) + Math.floor(gs.distanceTraveled),
+    deaths: (clientProfile.stats.deaths || 0) + 1,
+    gamesPlayed: { ...clientProfile.stats.gamesPlayed }
+  };
+  
+  updatedStats.gamesPlayed[mode] = (updatedStats.gamesPlayed[mode] || 0) + 1;
+
+  // 2. Update records
+  const updatedRecords = { ...clientProfile.records };
+  if (mode !== 'campaign') {
+    const prevBest = updatedRecords[mode] || { score: 0, distance: 0 };
+    if (gs.score > prevBest.score) {
+      updatedRecords[mode] = {
+        score: gs.score,
+        distance: Math.floor(gs.distanceTraveled),
+        date: Date.now()
+      };
+    }
+  }
+
+  // 3. Update campaign progress if applicable
+  let updatedCampaign = { ...clientProfile.campaign };
+  if (mode === 'campaign' && gs.campaign) {
+    if (gs.screen === 'worldcomplete' || gs.screen === 'gamecomplete') {
+      const currentWorld = gs.campaign.currentWorld;
+      const starsEarned = gs.campaign.earnedStars ? gs.campaign.earnedStars.reduce((a, b) => a + b, 0) : 0;
+      
+      const starsPerWorld = [...(updatedCampaign.starsPerWorld || [0, 0, 0, 0, 0])];
+      starsPerWorld[currentWorld - 1] = Math.max(starsPerWorld[currentWorld - 1] || 0, starsEarned);
+      
+      updatedCampaign.starsPerWorld = starsPerWorld;
+      
+      if (currentWorld === 5) {
+        updatedCampaign.completed = true;
+      } else {
+        updatedCampaign.currentWorld = Math.max(updatedCampaign.currentWorld, currentWorld + 1);
+      }
+    }
+  }
+
+  // Define session state for badge/achievement checking
+  const sessionState = {
+    score: gs.score,
+    distance: Math.floor(gs.distanceTraveled),
+    starsCollected: runStats.starsCollected,
+    flips: runStats.flips || 0,
+    mode: mode,
+    world: mode === 'campaign' ? gs.campaign.currentWorld : 0,
+    starsEarned: mode === 'campaign' ? (gs.campaign.earnedStars ? gs.campaign.earnedStars.reduce((a, b) => a + b, 0) : 0) : 0,
+    timeSurvivedMs: runStats.playTimeMs,
+    closeCalls: runStats.closeCalls || 0,
+    damageTaken: 1, // Since they hit an obstacle to die, they took damage!
+    finalSpeed: gs.speed
+  };
+
+  // 4. Check achievements and badges locally
+  const newAchievements = checkClientAchievements(clientProfile, updatedStats, updatedRecords, updatedCampaign);
+  const newBadges = checkClientBadges(clientProfile, sessionState);
+
+  const finalAchievements = [...clientProfile.achievements];
+  newAchievements.forEach(id => {
+    if (!finalAchievements.some(a => a.id === id)) {
+      finalAchievements.push({ id, unlockedAt: Date.now() });
+      spawnAchievementNotification(id);
+    }
+  });
+
+  const finalBadges = [...clientProfile.badges];
+  newBadges.forEach(id => {
+    if (!finalBadges.includes(id)) {
+      finalBadges.push(id);
+      spawnBadgeNotification(id);
+    }
+  });
+
+  // Save/submit to API
+  const updatePayload = {
+    id: clientProfile.id,
+    stats: updatedStats,
+    records: updatedRecords,
+    campaign: updatedCampaign,
+    achievements: finalAchievements,
+    badges: finalBadges
+  };
+
+  try {
+    const res = await fetch('/api/profile/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatePayload)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      clientProfile = data.profile;
+      if (window.ProfileUI && window.ProfileUI.render) {
+        window.ProfileUI.render();
+      }
+    }
+  } catch (e) {
+    console.error('Error updating profile:', e);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  OVERLAY DOM WIRING
 // ═══════════════════════════════════════════════════════════════
