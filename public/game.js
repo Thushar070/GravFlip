@@ -3561,4 +3561,15 @@ function gameLoop(timestamp) {
 // ═══════════════════════════════════════════════════════════════
 // Initialize API session (non-blocking, game works offline)
 API.init().catch(() => {});
-requestAnimationFrame(gameLoop);
+
+// Enforce Orbitron font rendering consistency by waiting for font load
+if (document.fonts && typeof document.fonts.ready === 'object') {
+  Promise.race([
+    document.fonts.ready,
+    new Promise(resolve => setTimeout(resolve, 1000))
+  ]).then(() => {
+    requestAnimationFrame(gameLoop);
+  });
+} else {
+  requestAnimationFrame(gameLoop);
+}
