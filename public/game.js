@@ -1871,10 +1871,8 @@ function drawFloorAndCeiling() {
     ceilGlitchY -= 8;
   }
   
-  // Ceiling
+  // Ceiling Block and Glow Edge
   ctx.save();
-  ctx.shadowBlur = ceilGlowVal;
-  ctx.shadowColor = glowColor;
   ctx.fillStyle = floorColor;
   
   if (isW3) {
@@ -1889,8 +1887,12 @@ function drawFloorAndCeiling() {
     ctx.closePath();
     ctx.fill();
     
+    // Outer Glow Pass (Wide, soft)
+    ctx.save();
+    ctx.shadowBlur = ceilGlowVal * 1.5;
+    ctx.shadowColor = glowColor;
     ctx.strokeStyle = glowColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(0, ceilY);
     for (let x = 0; x <= DISPLAY.WIDTH; x += 20) {
@@ -1898,29 +1900,62 @@ function drawFloorAndCeiling() {
       ctx.lineTo(x, bumpyY);
     }
     ctx.stroke();
+    ctx.restore();
+
+    // Inner Glow Pass (Narrow, bright white core)
+    ctx.save();
+    ctx.shadowBlur = ceilGlowVal * 0.4;
+    ctx.shadowColor = '#ffffff';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, ceilY);
+    for (let x = 0; x <= DISPLAY.WIDTH; x += 20) {
+      const bumpyY = ceilY + Math.sin(x * 0.05 + gs.distanceTraveled * 0.02) * 4;
+      ctx.lineTo(x, bumpyY);
+    }
+    ctx.stroke();
+    ctx.restore();
   } else {
+    // Fill the ceiling solid block
     ctx.fillRect(0, 0, DISPLAY.WIDTH, ceilGlitchY);
+    
+    // Outer Glow Pass (Wide, soft)
+    ctx.save();
+    ctx.shadowBlur = ceilGlowVal * 1.5;
+    ctx.shadowColor = glowColor;
     ctx.fillStyle = glowColor;
-    ctx.fillRect(0, ceilGlitchY - 2, DISPLAY.WIDTH, 2);
+    ctx.fillRect(0, ceilGlitchY - 3, DISPLAY.WIDTH, 3);
+    ctx.restore();
+
+    // Inner Glow Pass (Narrow, white core)
+    ctx.save();
+    ctx.shadowBlur = ceilGlowVal * 0.4;
+    ctx.shadowColor = '#ffffff';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, ceilGlitchY - 1, DISPLAY.WIDTH, 1);
+    ctx.restore();
     
     if (isW2) {
+      ctx.save();
       ctx.strokeStyle = 'rgba(255,255,255,0.1)';
       ctx.lineWidth = 1;
       for (let gy = 4; gy < ceilGlitchY - 2; gy += 6) {
         ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(DISPLAY.WIDTH, gy); ctx.stroke();
       }
+      ctx.restore();
     } else if (isW4) {
+      ctx.save();
       ctx.strokeStyle = '#ffff00';
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(0, ceilGlitchY - 1); ctx.lineTo(DISPLAY.WIDTH, ceilGlitchY - 1); ctx.stroke();
+      ctx.restore();
     }
   }
   ctx.restore();
   
-  // Floor
+  // Floor Block and Glow Edge
   ctx.save();
-  ctx.shadowBlur = floorGlowVal;
-  ctx.shadowColor = glowColor;
   ctx.fillStyle = floorColor;
   
   if (isW3) {
@@ -1935,8 +1970,12 @@ function drawFloorAndCeiling() {
     ctx.closePath();
     ctx.fill();
     
+    // Outer Glow Pass (Wide, soft)
+    ctx.save();
+    ctx.shadowBlur = floorGlowVal * 1.5;
+    ctx.shadowColor = glowColor;
     ctx.strokeStyle = glowColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(0, floorY);
     for (let x = 0; x <= DISPLAY.WIDTH; x += 20) {
@@ -1944,21 +1983,56 @@ function drawFloorAndCeiling() {
       ctx.lineTo(x, bumpyY);
     }
     ctx.stroke();
+    ctx.restore();
+
+    // Inner Glow Pass (Narrow, bright white core)
+    ctx.save();
+    ctx.shadowBlur = floorGlowVal * 0.4;
+    ctx.shadowColor = '#ffffff';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, floorY);
+    for (let x = 0; x <= DISPLAY.WIDTH; x += 20) {
+      const bumpyY = floorY - Math.sin(x * 0.05 + gs.distanceTraveled * 0.02) * 4;
+      ctx.lineTo(x, bumpyY);
+    }
+    ctx.stroke();
+    ctx.restore();
   } else {
+    // Fill the floor solid block
     ctx.fillRect(0, floorGlitchY, DISPLAY.WIDTH, DISPLAY.HEIGHT - floorGlitchY);
+    
+    // Outer Glow Pass (Wide, soft)
+    ctx.save();
+    ctx.shadowBlur = floorGlowVal * 1.5;
+    ctx.shadowColor = glowColor;
     ctx.fillStyle = glowColor;
-    ctx.fillRect(0, floorGlitchY, DISPLAY.WIDTH, 2);
+    ctx.fillRect(0, floorGlitchY, DISPLAY.WIDTH, 3);
+    ctx.restore();
+
+    // Inner Glow Pass (Narrow, white core)
+    ctx.save();
+    ctx.shadowBlur = floorGlowVal * 0.4;
+    ctx.shadowColor = '#ffffff';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, floorGlitchY, DISPLAY.WIDTH, 1);
+    ctx.restore();
     
     if (isW2) {
+      ctx.save();
       ctx.strokeStyle = 'rgba(255,255,255,0.1)';
       ctx.lineWidth = 1;
       for (let gy = floorGlitchY + 4; gy < DISPLAY.HEIGHT - 4; gy += 6) {
         ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(DISPLAY.WIDTH, gy); ctx.stroke();
       }
+      ctx.restore();
     } else if (isW4) {
+      ctx.save();
       ctx.strokeStyle = '#ffff00';
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(0, floorGlitchY + 1); ctx.lineTo(DISPLAY.WIDTH, floorGlitchY + 1); ctx.stroke();
+      ctx.restore();
     }
   }
   ctx.restore();
