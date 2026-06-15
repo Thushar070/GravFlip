@@ -2191,7 +2191,9 @@ function confirmModeSelection() {
   const fc = gs.frameCount;
   const idx = gs.modeSelectIndex;
 
+  const savedTheme = (window.clientProfile && clientProfile.selectedTheme && clientProfile.selectedTheme !== 'none') ? clientProfile.selectedTheme : 'deepspace';
   gs = createInitialState();
+  gs.theme = savedTheme;
   gs.mode = sel;
   gs.modeSelectIndex = idx;
   
