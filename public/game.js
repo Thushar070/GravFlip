@@ -4937,6 +4937,48 @@ function drawDeathFlashEffect() {
   ctx.restore();
 }
 
+function drawRecentScoresTicker() {
+  if (gs.screen !== 'start' && gs.screen !== 'modeselect') return;
+  if (!recentScoresText) return;
+  
+  ctx.save();
+  // Ticker background bar
+  const barY = DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT - 22;
+  ctx.fillStyle = 'rgba(5, 5, 15, 0.65)';
+  ctx.fillRect(0, barY, DISPLAY.WIDTH, 20);
+  
+  // Borders
+  ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, barY); ctx.lineTo(DISPLAY.WIDTH, barY);
+  ctx.moveTo(0, barY + 20); ctx.lineTo(DISPLAY.WIDTH, barY + 20);
+  ctx.stroke();
+  
+  // Ticker text
+  ctx.font = '10px Orbitron, monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  
+  // Clip text within bounds
+  ctx.beginPath();
+  ctx.rect(0, barY, DISPLAY.WIDTH, 20);
+  ctx.clip();
+  
+  ctx.fillStyle = 'rgba(0, 255, 255, 0.85)';
+  ctx.shadowBlur = 4;
+  ctx.shadowColor = COLORS.NEON_CYAN;
+  ctx.fillText(recentScoresText, recentScoresOffset, barY + 10);
+  
+  // Measure text to wrap around
+  const textW = ctx.measureText(recentScoresText).width;
+  if (recentScoresOffset < -textW) {
+    recentScoresOffset = DISPLAY.WIDTH;
+  }
+  
+  ctx.restore();
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  SCREEN OVERLAYS
 // ═══════════════════════════════════════════════════════════════
