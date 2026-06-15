@@ -148,7 +148,871 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  USER PROFILE SYSTEM FRONTEND ENGINE
+// ═══════════════════════════════════════════════════════════════
+let clientProfile = null;
+
+const CLIENT_ACHIEVEMENTS = [
+  { id: 'first_step', name: 'First Step', desc: 'Play your first game of GravFlip', tier: 'bronze' },
+  { id: 'runner_recruit', name: 'Runner Recruit', desc: 'Play 50 games total', tier: 'silver' },
+  { id: 'addicted_runner', name: 'Addicted Runner', desc: 'Play 200 games total', tier: 'gold' },
+  { id: 'flip_100', name: 'Gravity Dabbler', desc: 'Perform 100 gravity flips', tier: 'bronze' },
+  { id: 'flip_1000', name: 'Flipping Master', desc: 'Perform 1,000 gravity flips', tier: 'silver' },
+  { id: 'flip_5000', name: 'Anti-Gravity Legend', desc: 'Perform 5,000 gravity flips', tier: 'gold' },
+  { id: 'star_hunter', name: 'Star Hunter', desc: 'Collect 50 stars total', tier: 'bronze' },
+  { id: 'star_hoarder', name: 'Star Hoarder', desc: 'Collect 500 stars total', tier: 'silver' },
+  { id: 'star_legend', name: 'Nebula Wealthy', desc: 'Collect 2,500 stars total', tier: 'gold' },
+  { id: 'classic_1000', name: 'Survivalist', desc: 'Reach a score of 1,000 in Classic Mode', tier: 'bronze' },
+  { id: 'classic_5000', name: 'Hyper-Runner', desc: 'Reach a score of 5,000 in Classic Mode', tier: 'silver' },
+  { id: 'classic_10000', name: 'Cosmic Pioneer', desc: 'Reach a score of 10,000 in Classic Mode', tier: 'gold' },
+  { id: 'walker', name: 'Space Walker', desc: 'Travel a total distance of 5,000 units', tier: 'bronze' },
+  { id: 'runner', name: 'Light Runner', desc: 'Travel a total distance of 50,000 units', tier: 'silver' },
+  { id: 'voyager', name: 'Grand Voyager', desc: 'Travel a total distance of 250,000 units', tier: 'gold' },
+  { id: 'world_1_cleared', name: 'Escape Orbit', desc: 'Complete Campaign World 1', tier: 'bronze' },
+  { id: 'world_3_cleared', name: 'Deep Space', desc: 'Complete Campaign World 3', tier: 'silver' },
+  { id: 'campaign_hero', name: 'Galaxy Savior', desc: 'Complete the entire Campaign mode', tier: 'gold' },
+  { id: 'perfect_stars', name: 'Star Perfecter', desc: 'Collect all 3 stars in every Campaign world', tier: 'gold' },
+  { id: 'gravflip_god', name: 'GravFlip Overlord', desc: 'Unlock all 19 other achievements', tier: 'platinum' }
+];
+
+const BADGES = [
+  { id: 'lucky_escape', name: 'Lucky Escape', description: 'Survive an obstacle within 5 pixels of clearance' },
+  { id: 'phantom_challenger', name: 'Phantom Challenger', description: 'Reach 1,500+ score in Classic/Blitz with 0 stars' },
+  { id: 'speed_demon', name: 'Speed Demon', description: 'Reach speed 7.5+ in Classic/Blitz with 0 shield damage' },
+  { id: 'flawless_run', name: 'Flawless Run', description: 'Complete any Campaign world with perfect 3 stars' },
+  { id: 'patient_runner', name: 'Patient Runner', description: 'Survive 45+ seconds with fewer than 8 gravity flips' },
+  { id: 'untouchable', name: 'Untouchable', description: 'Reach 3,000+ score in Classic/Blitz with 0 damage' }
+];
+
+function checkClientAchievements(profile, stats, records, campaign) {
+  const currentIds = new Set((profile.achievements || []).map(a => a.id));
+  const newlyUnlocked = [];
+  
+  const g = stats.gamesPlayed || {};
+  const totalGames = (g.classic || 0) + (g.mirror || 0) + (g.blitz || 0) + (g.campaign || 0);
+  
+  if (totalGames >= 1) newlyUnlocked.push('first_step');
+  if (totalGames >= 50) newlyUnlocked.push('runner_recruit');
+  if (totalGames >= 200) newlyUnlocked.push('addicted_runner');
+  
+  if ((stats.totalFlips || 0) >= 100) newlyUnlocked.push('flip_100');
+  if ((stats.totalFlips || 0) >= 1000) newlyUnlocked.push('flip_1000');
+  if ((stats.totalFlips || 0) >= 5000) newlyUnlocked.push('flip_5000');
+  
+  if ((stats.totalStarsCollected || 0) >= 50) newlyUnlocked.push('star_hunter');
+  if ((stats.totalStarsCollected || 0) >= 500) newlyUnlocked.push('star_hoarder');
+  if ((stats.totalStarsCollected || 0) >= 2500) newlyUnlocked.push('star_legend');
+  
+  if ((records.classic?.score || 0) >= 1000) newlyUnlocked.push('classic_1000');
+  if ((records.classic?.score || 0) >= 5000) newlyUnlocked.push('classic_5000');
+  if ((records.classic?.score || 0) >= 10000) newlyUnlocked.push('classic_10000');
+  
+  if ((stats.totalDistanceTraveled || 0) >= 5000) newlyUnlocked.push('walker');
+  if ((stats.totalDistanceTraveled || 0) >= 50000) newlyUnlocked.push('runner');
+  if ((stats.totalDistanceTraveled || 0) >= 250000) newlyUnlocked.push('voyager');
+  
+  if ((campaign.currentWorld || 1) > 1 || (campaign.completed || false)) newlyUnlocked.push('world_1_cleared');
+  if ((campaign.currentWorld || 1) > 3 || (campaign.completed || false)) newlyUnlocked.push('world_3_cleared');
+  if (campaign.completed) newlyUnlocked.push('campaign_hero');
+  
+  const starsSum = (campaign.starsPerWorld || []).reduce((sum, s) => sum + s, 0);
+  if (starsSum >= 15) newlyUnlocked.push('perfect_stars');
+  
+  // Platinum check
+  const allCurrent = new Set([...currentIds, ...newlyUnlocked]);
+  const otherIds = CLIENT_ACHIEVEMENTS.filter(a => a.id !== 'gravflip_god').map(a => a.id);
+  if (otherIds.every(id => allCurrent.has(id))) {
+    newlyUnlocked.push('gravflip_god');
+  }
+  
+  return newlyUnlocked.filter(id => !currentIds.has(id));
+}
+
+function checkClientBadges(profile, sessionState) {
+  const current = new Set(profile.badges || []);
+  const newlyUnlocked = [];
+  
+  if (sessionState.closeCalls > 0) newlyUnlocked.push('lucky_escape');
+  
+  if (
+    (sessionState.mode === 'classic' || sessionState.mode === 'blitz') &&
+    sessionState.score >= 1500 &&
+    sessionState.starsCollected === 0
+  ) {
+    newlyUnlocked.push('phantom_challenger');
+  }
+  
+  if (
+    (sessionState.mode === 'classic' || sessionState.mode === 'blitz') &&
+    sessionState.finalSpeed >= 7.5 &&
+    sessionState.damageTaken === 0
+  ) {
+    newlyUnlocked.push('speed_demon');
+  }
+  
+  if (
+    sessionState.mode === 'campaign' &&
+    sessionState.starsEarned === 3
+  ) {
+    newlyUnlocked.push('flawless_run');
+  }
+  
+  if (
+    sessionState.timeSurvivedMs >= 45000 &&
+    sessionState.flips < 8
+  ) {
+    newlyUnlocked.push('patient_runner');
+  }
+  
+  if (
+    (sessionState.mode === 'classic' || sessionState.mode === 'blitz') &&
+    sessionState.score >= 3000 &&
+    sessionState.damageTaken === 0
+  ) {
+    newlyUnlocked.push('untouchable');
+  }
+  
+  return newlyUnlocked.filter(id => !current.has(id));
+}
+
+function spawnAchievementNotification(achId) {
+  const ach = CLIENT_ACHIEVEMENTS.find(a => a.id === achId);
+  if (!ach) return;
+  const toast = document.getElementById('achievement-toast');
+  const toastName = document.getElementById('achievement-toast-name');
+  if (!toast || !toastName) return;
+
+  toastName.textContent = ach.name;
+  toast.classList.remove('hidden');
+  collectSound();
+
+  setTimeout(() => {
+    toast.classList.add('hidden');
+  }, 4000);
+}
+
+function spawnBadgeNotification(badgeId) {
+  const badge = BADGES.find(b => b.id === badgeId);
+  if (!badge) return;
+  const toast = document.getElementById('badge-toast');
+  const toastName = document.getElementById('badge-toast-name');
+  if (!toast || !toastName) return;
+
+  toastName.textContent = badge.name;
+  toast.classList.remove('hidden');
+  collectSound();
+
+  setTimeout(() => {
+    toast.classList.add('hidden');
+  }, 4000);
+}
+
+const ProfileUI = {
+  activeTab: 'overview',
+  activeFriendTab: 'list',
+
+  init() {
+    this.overlay = document.getElementById('profile-overlay');
+    this.closeBtn = document.getElementById('close-profile');
+    this.menuBtn = document.getElementById('profile-menu-btn');
+    this.lbMenuBtn = document.getElementById('leaderboard-menu-btn');
+    this.floatingMenu = document.getElementById('floating-menu');
+
+    this.tabBtns = document.querySelectorAll('.profile-tab-btn');
+    this.tabPanels = document.querySelectorAll('.tab-panel');
+
+    this.editUsernameBtn = document.getElementById('edit-username-btn');
+    this.editUsernameContainer = document.getElementById('edit-username-container');
+    this.editUsernameInput = document.getElementById('edit-username-input');
+    this.saveUsernameBtn = document.getElementById('save-username-btn');
+    this.profileUsernameTitle = document.getElementById('profile-username-title');
+    this.profileActiveBadgeTag = document.getElementById('profile-active-badge-tag');
+
+    // Avatar inputs
+    this.colorHelmet = document.getElementById('color-helmet');
+    this.colorVisor = document.getElementById('color-visor');
+    this.colorSuit = document.getElementById('color-suit');
+    this.colorAccent = document.getElementById('color-accent');
+    this.selectEmblem = document.getElementById('select-emblem');
+
+    // Friends inputs
+    this.friendInput = document.getElementById('friend-username-input');
+    this.addFriendBtn = document.getElementById('add-friend-btn');
+    this.friendSubtabs = document.querySelectorAll('.friend-subtab');
+    this.friendSubpanels = document.querySelectorAll('.friend-subpanel');
+
+    this.bindEvents();
+    this.initAvatar();
+  },
+
+  bindEvents() {
+    if (this.menuBtn) this.menuBtn.addEventListener('click', (e) => { e.stopPropagation(); this.show(); });
+    if (this.lbMenuBtn) this.lbMenuBtn.addEventListener('click', (e) => { e.stopPropagation(); showLeaderboard(); });
+    if (this.closeBtn) this.closeBtn.addEventListener('click', (e) => { e.stopPropagation(); this.hide(); });
+
+    // Tabs
+    this.tabBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tab = btn.dataset.tab;
+        this.switchTab(tab);
+      });
+    });
+
+    // Username edit
+    if (this.editUsernameBtn) this.editUsernameBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.profileUsernameTitle.classList.add('hidden');
+      this.editUsernameBtn.classList.add('hidden');
+      this.editUsernameContainer.classList.remove('hidden');
+      this.editUsernameInput.value = clientProfile ? clientProfile.username : '';
+      this.editUsernameInput.focus();
+    });
+
+    if (this.saveUsernameBtn) this.saveUsernameBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.saveUsername();
+    });
+
+    if (this.editUsernameInput) this.editUsernameInput.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.code === 'Enter') { e.preventDefault(); this.saveUsername(); }
+    });
+
+    // Color inputs
+    const drawAndSave = () => {
+      drawAvatarCustomizerPreview();
+      this.saveAvatar();
+    };
+    [this.colorHelmet, this.colorVisor, this.colorSuit, this.colorAccent].forEach(input => {
+      if (input) input.addEventListener('input', drawAndSave);
+    });
+    if (this.selectEmblem) this.selectEmblem.addEventListener('change', drawAndSave);
+
+    // Friends Subtabs
+    this.friendSubtabs.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const subtab = btn.dataset.subtab;
+        this.switchFriendTab(subtab);
+      });
+    });
+
+    if (this.addFriendBtn) this.addFriendBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.sendFriendRequest();
+    });
+
+    // Prevent propagation
+    if (this.overlay) {
+      this.overlay.addEventListener('click', (e) => e.stopPropagation());
+      this.overlay.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: false });
+    }
+  },
+
+  initAvatar() {
+    if (!clientProfile) return;
+    const av = clientProfile.avatar || {};
+    if (this.colorHelmet) this.colorHelmet.value = av.helmet || '#ffffff';
+    if (this.colorVisor) this.colorVisor.value = av.visor || '#88ccff';
+    if (this.colorSuit) this.colorSuit.value = av.suit || '#ffffff';
+    if (this.colorAccent) this.colorAccent.value = av.accent || '#00ffff';
+    if (this.selectEmblem) this.selectEmblem.value = av.emblem || 'star';
+    drawAvatarCustomizerPreview();
+  },
+
+  async show() {
+    if (this.overlay) this.overlay.classList.remove('hidden');
+    showLoading();
+    await this.fetchDetails();
+    hideLoading();
+    this.render();
+  },
+
+  hide() {
+    if (this.overlay) this.overlay.classList.add('hidden');
+  },
+
+  switchTab(tab) {
+    this.activeTab = tab;
+    this.tabBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    this.tabPanels.forEach(panel => {
+      panel.classList.toggle('active', panel.id === `tab-${tab}`);
+    });
+    this.render();
+  },
+
+  switchFriendTab(subtab) {
+    this.activeFriendTab = subtab;
+    this.friendSubtabs.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.subtab === subtab);
+    });
+    this.friendSubpanels.forEach(panel => {
+      panel.classList.toggle('active', panel.id === `friend-subpanel-${subtab}`);
+    });
+    this.render();
+  },
+
+  updateFloatingMenu() {
+    if (!this.floatingMenu) return;
+    if (gs.screen === 'start' || gs.screen === 'modeselect' || gs.screen === 'dead') {
+      this.floatingMenu.classList.remove('hidden');
+    } else {
+      this.floatingMenu.classList.add('hidden');
+    }
+  },
+
+  async fetchDetails() {
+    if (!clientProfile || !clientProfile.id) return;
+    try {
+      const res = await fetch(`/api/profile/get?id=${clientProfile.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        clientProfile = data.profile;
+        this.initAvatar();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  async saveUsername() {
+    if (!clientProfile) return;
+    const newUsername = this.editUsernameInput.value.trim();
+    if (!newUsername || newUsername === clientProfile.username) {
+      this.profileUsernameTitle.classList.remove('hidden');
+      this.editUsernameBtn.classList.remove('hidden');
+      this.editUsernameContainer.classList.add('hidden');
+      return;
+    }
+
+    showLoading();
+    try {
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: clientProfile.id, username: newUsername })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const oldU = clientProfile.username;
+        clientProfile = data.profile;
+        if (clientProfile.username === oldU && newUsername !== oldU) {
+          alert('Username already taken or invalid!');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    hideLoading();
+    this.profileUsernameTitle.classList.remove('hidden');
+    this.editUsernameBtn.classList.remove('hidden');
+    this.editUsernameContainer.classList.add('hidden');
+    this.render();
+  },
+
+  async saveAvatar() {
+    if (!clientProfile) return;
+    const helmet = this.colorHelmet.value;
+    const visor = this.colorVisor.value;
+    const suit = this.colorSuit.value;
+    const accent = this.colorAccent.value;
+    const emblem = this.selectEmblem.value;
+
+    try {
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: clientProfile.id,
+          avatar: { helmet, visor, suit, accent, emblem }
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        clientProfile = data.profile;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  async equipBadge(badgeId) {
+    if (!clientProfile) return;
+    showLoading();
+    try {
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: clientProfile.id, activeBadge: badgeId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        clientProfile = data.profile;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    hideLoading();
+    this.render();
+  },
+
+  async sendFriendRequest() {
+    if (!clientProfile) return;
+    const fUsername = this.friendInput.value.trim();
+    if (!fUsername) return;
+
+    showLoading();
+    try {
+      const res = await fetch('/api/profile/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: clientProfile.id, action: 'send', targetUsername: fUsername })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        clientProfile = data.profile;
+        this.friendInput.value = '';
+        alert('Friend request sent!');
+      } else {
+        alert(data.error || 'Failed to send request');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    hideLoading();
+    this.render();
+  },
+
+  async acceptRequest(reqId) {
+    if (!clientProfile) return;
+    showLoading();
+    try {
+      const res = await fetch('/api/profile/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: clientProfile.id, action: 'accept', targetId: reqId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        clientProfile = data.profile;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    hideLoading();
+    this.render();
+  },
+
+  async declineRequest(reqId) {
+    if (!clientProfile) return;
+    showLoading();
+    try {
+      const res = await fetch('/api/profile/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: clientProfile.id, action: 'decline', targetId: reqId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        clientProfile = data.profile;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    hideLoading();
+    this.render();
+  },
+
+  async removeFriend(friendId) {
+    if (!clientProfile) return;
+    if (!confirm('Are you sure you want to remove this friend?')) return;
+    showLoading();
+    try {
+      const res = await fetch('/api/profile/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: clientProfile.id, action: 'remove', targetId: friendId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        clientProfile = data.profile;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    hideLoading();
+    this.render();
+  },
+
+  render() {
+    if (!clientProfile) return;
+
+    // Title / Header
+    if (this.profileUsernameTitle) this.profileUsernameTitle.textContent = clientProfile.username;
+    
+    // Active Badge display
+    if (this.profileActiveBadgeTag) {
+      const activeB = BADGES.find(b => b.id === clientProfile.activeBadge);
+      if (activeB) {
+        this.profileActiveBadgeTag.textContent = activeB.name.toUpperCase();
+        this.profileActiveBadgeTag.classList.remove('hidden');
+      } else {
+        this.profileActiveBadgeTag.textContent = 'NO BADGE';
+      }
+    }
+
+    if (this.activeTab === 'overview') {
+      // Fetch rank summary
+      fetch(`/api/profile/stats?id=${clientProfile.id}`).then(res => res.json()).then(data => {
+        const sum = data.statsSummary || {};
+        document.getElementById('overview-rank').textContent = sum.globalRank ? `#${sum.globalRank}` : '#99+';
+      }).catch(() => {});
+
+      document.getElementById('overview-classic-best').textContent = clientProfile.records?.classic?.score || 0;
+      
+      const stars = (clientProfile.campaign?.starsPerWorld || []).reduce((sum, s) => sum + s, 0);
+      const wNum = clientProfile.campaign?.completed ? 'COMPLETED' : `W${clientProfile.campaign?.currentWorld || 1}`;
+      document.getElementById('overview-campaign').textContent = `${wNum} (${stars}/15 \u2605)`;
+      drawAvatarCustomizerPreview();
+    }
+    else if (this.activeTab === 'stats') {
+      const s = clientProfile.stats || {};
+      const g = s.gamesPlayed || {};
+      const totalGames = (g.classic || 0) + (g.mirror || 0) + (g.blitz || 0) + (g.campaign || 0);
+      const playSecs = Math.floor((s.totalPlayTimeMs || 0) / 1000);
+
+      document.getElementById('stats-classic-score').textContent = clientProfile.records?.classic?.score || 0;
+      document.getElementById('stats-mirror-score').textContent = clientProfile.records?.mirror?.score || 0;
+      document.getElementById('stats-blitz-score').textContent = clientProfile.records?.blitz?.score || 0;
+
+      document.getElementById('stats-total-games').textContent = totalGames;
+      document.getElementById('stats-playtime').textContent = playSecs + 's';
+      document.getElementById('stats-flips').textContent = s.totalFlips || 0;
+      document.getElementById('stats-stars').textContent = s.totalStarsCollected || 0;
+      document.getElementById('stats-distance').textContent = (s.totalDistanceTraveled || 0) + 'm';
+      document.getElementById('stats-deaths').textContent = s.deaths || 0;
+    }
+    else if (this.activeTab === 'achievements') {
+      const container = document.getElementById('achievements-container');
+      if (!container) return;
+      
+      const unlockedIds = new Set((clientProfile.achievements || []).map(a => a.id));
+      
+      container.innerHTML = CLIENT_ACHIEVEMENTS.map(ach => {
+        const isUnlocked = unlockedIds.has(ach.id);
+        const lockIcon = isUnlocked ? '🏆' : '🔒';
+        const itemClass = isUnlocked ? `unlocked ${ach.tier}` : 'locked';
+        
+        return `<div class="achievement-item ${itemClass}">
+          <div class="achievement-icon">${lockIcon}</div>
+          <div class="achievement-info">
+            <span class="achievement-title">${ach.name}</span>
+            <span class="achievement-desc">${ach.desc}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    else if (this.activeTab === 'badges') {
+      const container = document.getElementById('badges-container');
+      if (!container) return;
+
+      const unlockedBadges = new Set(clientProfile.badges || []);
+      const activeBadge = clientProfile.activeBadge;
+
+      container.innerHTML = BADGES.map(badge => {
+        const isUnlocked = unlockedBadges.has(badge.id);
+        const isActive = activeBadge === badge.id;
+        const itemClass = isActive ? 'equipped' : (isUnlocked ? 'unlocked' : 'locked');
+        
+        let actionHtml = '';
+        if (isActive) {
+          actionHtml = `<span class="badge-equipped-label">EQUIPPED</span>`;
+        } else if (isUnlocked) {
+          actionHtml = `<button class="badge-equip-btn" onclick="ProfileUI.equipBadge('${badge.id}')">EQUIP</button>`;
+        } else {
+          actionHtml = `<span class="badge-locked-label">LOCKED</span>`;
+        }
+
+        return `<div class="badge-item ${itemClass}">
+          <div class="badge-info">
+            <div class="badge-title-row">
+              <span class="badge-name">${badge.name}</span>
+            </div>
+            <span class="badge-desc">${badge.description}</span>
+          </div>
+          <div class="badge-action">${actionHtml}</div>
+        </div>`;
+      }).join('');
+    }
+    else if (this.activeTab === 'friends') {
+      // Requests count
+      const reqCount = (clientProfile.friendRequestsReceived || []).length;
+      const rSpan = document.getElementById('requests-count');
+      if (rSpan) rSpan.textContent = reqCount;
+
+      if (this.activeFriendTab === 'list') {
+        const listContainer = document.getElementById('friends-list-container');
+        if (!listContainer) return;
+        const friends = clientProfile.friends || [];
+        if (friends.length === 0) {
+          listContainer.innerHTML = '<div class="lb-empty">NO FRIENDS ADDED YET</div>';
+          return;
+        }
+        
+        listContainer.innerHTML = '';
+        friends.forEach(async (fId) => {
+          try {
+            const res = await fetch(`/api/profile/get?id=${fId}`);
+            if (res.ok) {
+              const data = await res.json();
+              const f = data.profile;
+              const fBadge = f.activeBadge ? `<span class="active-badge-tag">${BADGES.find(b => b.id === f.activeBadge)?.name || ''}</span>` : '';
+              const el = document.createElement('div');
+              el.className = 'friend-item';
+              el.innerHTML = `
+                <div class="friend-info">
+                  <div class="badge-title-row">
+                    <span class="friend-name">${escapeHtml(f.username)}</span>
+                    ${fBadge}
+                  </div>
+                  <span class="friend-status">Classic Best: ${f.records?.classic?.score || 0}</span>
+                </div>
+                <button class="remove-friend-btn" onclick="ProfileUI.removeFriend('${f.id}')">REMOVE</button>
+              `;
+              listContainer.appendChild(el);
+            }
+          } catch (e) {}
+        });
+      }
+      else if (this.activeFriendTab === 'requests') {
+        const reqContainer = document.getElementById('requests-list-container');
+        if (!reqContainer) return;
+        
+        const rec = clientProfile.friendRequestsReceived || [];
+        const sent = clientProfile.friendRequestsSent || [];
+        
+        if (rec.length === 0 && sent.length === 0) {
+          reqContainer.innerHTML = '<div class="lb-empty">NO PENDING REQUESTS</div>';
+          return;
+        }
+
+        reqContainer.innerHTML = '';
+        
+        // Incoming
+        rec.forEach(async (fId) => {
+          try {
+            const res = await fetch(`/api/profile/get?id=${fId}`);
+            if (res.ok) {
+              const data = await res.json();
+              const f = data.profile;
+              const el = document.createElement('div');
+              el.className = 'request-item';
+              el.innerHTML = `
+                <div class="friend-info">
+                  <span class="friend-name">${escapeHtml(f.username)}</span>
+                  <span class="friend-status">Incoming request</span>
+                </div>
+                <div class="request-actions">
+                  <button class="accept-btn" onclick="ProfileUI.acceptRequest('${f.id}')">ACCEPT</button>
+                  <button class="decline-btn" onclick="ProfileUI.declineRequest('${f.id}')">DECLINE</button>
+                </div>
+              `;
+              reqContainer.appendChild(el);
+            }
+          } catch (e) {}
+        });
+
+        // Outgoing
+        sent.forEach(async (fId) => {
+          try {
+            const res = await fetch(`/api/profile/get?id=${fId}`);
+            if (res.ok) {
+              const data = await res.json();
+              const f = data.profile;
+              const el = document.createElement('div');
+              el.className = 'request-item';
+              el.innerHTML = `
+                <div class="friend-info">
+                  <span class="friend-name">${escapeHtml(f.username)}</span>
+                  <span class="friend-status">Outgoing request (Pending)</span>
+                </div>
+                <span class="friend-status">SENT</span>
+              `;
+              reqContainer.appendChild(el);
+            }
+          } catch (e) {}
+        });
+      }
+      else if (this.activeFriendTab === 'leaderboard') {
+        const container = document.getElementById('social-leaderboard-container');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="lb-empty">LOADING SOCIAL BOARD...</div>';
+        
+        fetch(`/api/leaderboard/friends?id=${clientProfile.id}`).then(res => res.json()).then(data => {
+          const scores = data.scores || [];
+          if (scores.length === 0) {
+            container.innerHTML = '<div class="lb-empty">NO ENTRIES</div>';
+            return;
+          }
+          container.innerHTML = scores.map((s, i) => {
+            const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            const isMe = s.id === clientProfile.id ? 'style="border-color: rgba(0, 255, 255, 0.4); background: rgba(0, 255, 255, 0.05);"' : '';
+            const badgeTag = s.activeBadge ? `<span class="active-badge-tag">${BADGES.find(b => b.id === s.activeBadge)?.name || ''}</span>` : '';
+            return `<div class="social-lb-entry friend-item" ${isMe}>
+              <span class="lb-rank ${rankClass}">${i + 1}</span>
+              <div class="friend-info" style="flex:1; margin-left: 10px;">
+                <div class="badge-title-row">
+                  <span class="friend-name">${escapeHtml(s.name)}</span>
+                  ${badgeTag}
+                </div>
+              </div>
+              <span class="lb-score">${s.score}</span>
+            </div>`;
+          }).join('');
+        }).catch(() => {
+          container.innerHTML = '<div class="lb-empty">FAILED TO LOAD SOCIAL BOARD</div>';
+        });
+      }
+    }
+  }
+};
+
+window.ProfileUI = ProfileUI;
+
+function drawAvatarCustomizerPreview() {
+  const previewCvs = document.getElementById('avatarCanvas');
+  if (!previewCvs) return;
+  const previewCtx = previewCvs.getContext('2d');
+  previewCtx.clearRect(0, 0, previewCvs.width, previewCvs.height);
+  
+  const size = 44;
+  const px = (previewCvs.width - size) / 2;
+  const py = (previewCvs.height - size) / 2;
+  
+  previewCtx.save();
+  
+  const colHelmet = document.getElementById('color-helmet').value;
+  const colVisor = document.getElementById('color-visor').value;
+  const colSuit = document.getElementById('color-suit').value;
+  const colAccent = document.getElementById('color-accent').value;
+  const colEmblem = document.getElementById('select-emblem').value;
+
+  // 1. Draw Backpack
+  previewCtx.save();
+  previewCtx.fillStyle = '#222233';
+  previewCtx.strokeStyle = '#444455';
+  previewCtx.lineWidth = 1;
+  roundRect(previewCtx, px - 6, py + size * 0.2, 8, size * 0.6, 4);
+  previewCtx.fill(); previewCtx.stroke();
+  previewCtx.restore();
+
+  // 2. Draw Space Suit Body
+  previewCtx.save();
+  previewCtx.beginPath();
+  roundRect(previewCtx, px, py, size, size, 12);
+  previewCtx.closePath();
+  
+  const suitGrd = previewCtx.createLinearGradient(px, py, px, py + size);
+  suitGrd.addColorStop(0, colHelmet);
+  suitGrd.addColorStop(0.4, colHelmet);
+  suitGrd.addColorStop(0.45, '#111122');
+  suitGrd.addColorStop(0.5, colSuit);
+  suitGrd.addColorStop(1, colSuit);
+  previewCtx.fillStyle = suitGrd;
+  previewCtx.fill();
+  
+  previewCtx.strokeStyle = '#222233';
+  previewCtx.lineWidth = 2.4;
+  previewCtx.stroke();
+  previewCtx.restore();
+
+  // 3. Draw Suit Details
+  previewCtx.save();
+  previewCtx.fillStyle = '#111122';
+  previewCtx.fillRect(px + 4, py + size * 0.42, size - 8, 4);
+  previewCtx.fillRect(px + 2, py + size * 0.72, size - 4, 5);
+  
+  previewCtx.fillStyle = colAccent;
+  previewCtx.shadowBlur = 12;
+  previewCtx.shadowColor = colAccent;
+  previewCtx.fillRect(px + size * 0.15, py + size * 0.52, size * 0.35, 4);
+  
+  // Emblem
+  const emX = px + size * 0.7;
+  const emY = py + size * 0.53;
+  previewCtx.beginPath();
+  if (colEmblem === 'star') {
+    draw4PointStarPath(previewCtx, emX, emY, 4, 8, 3);
+    previewCtx.fill();
+  } else if (colEmblem === 'orb') {
+    previewCtx.arc(emX, emY, 6, 0, Math.PI * 2);
+    previewCtx.fill();
+  } else if (colEmblem === 'cross') {
+    previewCtx.fillRect(emX - 6, emY - 2, 12, 4);
+    previewCtx.fillRect(emX - 2, emY - 6, 4, 12);
+  } else if (colEmblem === 'delta') {
+    previewCtx.moveTo(emX, emY - 6);
+    previewCtx.lineTo(emX - 6, emY + 6);
+    previewCtx.lineTo(emX + 6, emY + 6);
+    previewCtx.closePath();
+    previewCtx.fill();
+  }
+  previewCtx.restore();
+
+  // 4. Draw Helmet Visor
+  previewCtx.save();
+  const vw = size * 0.6, vh = size * 0.32, vx = px + size * 0.3, vy = py + size * 0.18, vr = 8;
+  previewCtx.fillStyle = '#0a0d14';
+  roundRect(previewCtx, vx, vy, vw, vh, vr);
+  previewCtx.fill();
+  
+  previewCtx.save();
+  previewCtx.globalAlpha = 0.65;
+  previewCtx.shadowBlur = 16;
+  previewCtx.shadowColor = colVisor;
+  previewCtx.fillStyle = colVisor;
+  roundRect(previewCtx, vx + 1.6, vy + 1.6, vw - 3.2, vh - 3.2, vr - 2);
+  previewCtx.fill();
+  previewCtx.restore();
+
+  previewCtx.save();
+  previewCtx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+  previewCtx.beginPath();
+  previewCtx.moveTo(vx + 4, vy);
+  previewCtx.lineTo(vx + vw * 0.4, vy);
+  previewCtx.lineTo(vx + vw * 0.12, vy + vh);
+  previewCtx.lineTo(vx, vy + vh);
+  previewCtx.closePath();
+  previewCtx.fill();
+  previewCtx.restore();
+  previewCtx.restore();
+
+  // 5. Draw Antennae
+  previewCtx.save();
+  previewCtx.fillStyle = colAccent;
+  previewCtx.beginPath(); previewCtx.arc(px + size * 0.35, py - 6, 4, 0, Math.PI * 2); previewCtx.fill();
+  previewCtx.beginPath(); previewCtx.arc(px + size * 0.65, py - 6, 4, 0, Math.PI * 2); previewCtx.fill();
+  previewCtx.restore();
+  
+  previewCtx.restore();
+}
+
 // Wire overlay buttons
+const overlayLeaderboard = document.getElementById('leaderboard-overlay');
+const overlayName = document.getElementById('name-overlay');
+const leaderboardList = document.getElementById('leaderboard-list');
+const closeLeaderboardBtn = document.getElementById('close-leaderboard');
+const submitScoreBtn = document.getElementById('submit-score-btn');
+const skipScoreBtn = document.getElementById('skip-score-btn');
+const playerNameInput = document.getElementById('player-name-input');
+const nameOverlayScore = document.getElementById('name-overlay-score');
+const loadingIndicator = document.getElementById('loading-indicator');
+
 if (closeLeaderboardBtn) closeLeaderboardBtn.addEventListener('click', (e) => {
   e.stopPropagation(); hideLeaderboard();
 });
