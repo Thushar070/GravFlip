@@ -449,10 +449,37 @@ function saveCampaignProgress(p) {
 function createStarfield() {
   const a = [];
   for (let i = 0; i < STARFIELD_COUNT; i++) {
+    // 3 layers: 0 (distant, small, slow), 1 (mid), 2 (foreground, large, fast)
+    const layer = i % 3;
+    let size, baseBrightness, speed, twinkleSpeed;
+    
+    if (layer === 0) {
+      size = 0.4 + Math.random() * 0.4;
+      baseBrightness = 0.15 + Math.random() * 0.25;
+      speed = 0.04 + Math.random() * 0.06;
+      twinkleSpeed = 0.015 + Math.random() * 0.02;
+    } else if (layer === 1) {
+      size = 0.8 + Math.random() * 0.7;
+      baseBrightness = 0.35 + Math.random() * 0.25;
+      speed = 0.12 + Math.random() * 0.12;
+      twinkleSpeed = 0.03 + Math.random() * 0.035;
+    } else {
+      size = 1.5 + Math.random() * 0.8;
+      baseBrightness = 0.6 + Math.random() * 0.25;
+      speed = 0.3 + Math.random() * 0.18;
+      twinkleSpeed = 0.06 + Math.random() * 0.055;
+    }
+    
     a.push({
-      x: Math.random() * DISPLAY.WIDTH, y: Math.random() * DISPLAY.HEIGHT,
-      size: 0.5 + Math.random() * 2, brightness: 0.3 + Math.random() * 0.7,
-      speed: 0.1 + Math.random() * 0.4
+      x: Math.random() * DISPLAY.WIDTH,
+      y: Math.random() * DISPLAY.HEIGHT,
+      layer,
+      size,
+      brightness: baseBrightness,
+      baseBrightness,
+      speed,
+      twinkleSpeed,
+      phase: Math.random() * Math.PI * 2
     });
   }
   return a;
@@ -1375,11 +1402,19 @@ function updatePopups(dt) {
 }
 
 function updateStarfield(dt) {
-  const spd = gs.speed * 0.2;
+  const spd = gs.speed * 0.25;
   for (let i = 0; i < gs.starfield.length; i++) {
     const s = gs.starfield[i];
     s.x -= s.speed * spd * dt;
-    if (s.x < 0) { s.x = DISPLAY.WIDTH; s.y = Math.random() * DISPLAY.HEIGHT; }
+    s.phase += s.twinkleSpeed * dt;
+    
+    // Smooth cosine-based brightness twinkling
+    s.brightness = Math.max(0.08, Math.min(1.0, s.baseBrightness + 0.15 * Math.sin(s.phase)));
+    
+    if (s.x < 0) {
+      s.x = DISPLAY.WIDTH;
+      s.y = Math.random() * DISPLAY.HEIGHT;
+    }
   }
 }
 
