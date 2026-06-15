@@ -1673,6 +1673,43 @@ function circleRectCollide(cx, cy, r, rx, ry, rw, rh) {
   return (dx * dx + dy * dy) < (r * r);
 }
 
+// Seeded pseudo-random generator (Mulberry32)
+let seededRandom = Math.random;
+
+function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
+function setGameSeed(seed) {
+  seededRandom = mulberry32(seed);
+}
+
+function gameRandom() {
+  if (gs.mode === 'daily') {
+    return seededRandom();
+  }
+  return Math.random();
+}
+
+function getGravity() {
+  if (gs.mode === 'daily' && gs.daily?.modifier === 'low_gravity') {
+    return PHYSICS.GRAVITY * 0.7; // 30% lower gravity
+  }
+  return PHYSICS.GRAVITY;
+}
+
+function getJumpForce() {
+  if (gs.mode === 'daily' && gs.daily?.modifier === 'low_gravity') {
+    return PHYSICS.JUMP_FORCE * 0.7; // 30% lower jump force
+  }
+  return PHYSICS.JUMP_FORCE;
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  GRAVITY FLIP
 // ═══════════════════════════════════════════════════════════════
