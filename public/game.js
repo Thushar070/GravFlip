@@ -2895,6 +2895,7 @@ function getThemeForZone(z) {
 
 function checkThemeChange() {
   if (gs.mode === 'campaign') return;
+  if (window.clientProfile && clientProfile.selectedTheme && clientProfile.selectedTheme !== 'none') return;
   const expectedTheme = getThemeForZone(gs.currentZone);
   if (expectedTheme !== gs.theme) {
     gs.themeTransition = {
