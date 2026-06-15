@@ -2035,6 +2035,11 @@ function killPlayer(who) {
   gs.deathDelay = 48;
   gs.newBest = false;
   
+  // Save replay snapshot
+  gs.lastReplay = [...gs.replayData];
+  gs.replayIndex = gs.lastReplay.length - 1;
+  gs.isScrubbing = false;
+
   // Record anti-cheat game data snapshot
   gs._lastGameData = {
     frameCount: gs.frameCount,
