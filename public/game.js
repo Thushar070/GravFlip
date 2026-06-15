@@ -286,7 +286,16 @@ function showLeaderboard() {
   if (!overlayLeaderboard || !leaderboardList) return;
   overlayLeaderboard.classList.remove('hidden');
   showLoading();
-  API.getLeaderboard().then(scores => {
+
+  const isDaily = gs.mode === 'daily';
+  const titleEl = document.querySelector('#leaderboard-overlay .overlay-title');
+  if (titleEl) {
+    titleEl.textContent = isDaily ? 'DAILY LEADERBOARD' : 'LEADERBOARD';
+  }
+
+  const fetchPromise = isDaily ? API.getDailyLeaderboard() : API.getLeaderboard();
+
+  fetchPromise.then(scores => {
     hideLoading();
     if (scores.length === 0) {
       leaderboardList.innerHTML = '<div class="lb-empty">NO SCORES YET — BE THE FIRST!</div>';
