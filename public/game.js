@@ -5464,6 +5464,10 @@ function gameLoop(timestamp) {
       } else {
         gs.screen = 'dead';
       }
+      
+      // Update profile stats and achievements/badges after run
+      updateProfileStatsAfterRun().catch(console.error);
+
       document.body.classList.remove('game-running');
       updateTapZoneVisibility();
     }
