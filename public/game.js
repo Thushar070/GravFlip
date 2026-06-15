@@ -5266,6 +5266,79 @@ function drawDeathScreen() {
   } else {
     ctx.fillText('PRESS SPACE OR TAP TO CONTINUE', DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.82);
   }
+
+  // ── DRAW REPLAY GHOST & SCRUBBER ──
+  if (gs.lastReplay && gs.lastReplay.length > 0 && gs.replayIndex >= 0) {
+    const pt = gs.lastReplay[gs.replayIndex];
+    if (pt) {
+      ctx.save();
+      ctx.globalAlpha = 0.45;
+      
+      // Draw P1 ghost
+      const ghostP1 = {
+        x: DISPLAY.WIDTH * 0.2 - PLAYER_CFG.SIZE / 2,
+        y: pt.y,
+        width: PLAYER_CFG.SIZE,
+        height: PLAYER_CFG.SIZE,
+        alive: true,
+        squishTimer: 0
+      };
+      drawPlayerShape(ghostP1, COLORS.PLAYER, COLORS.VISOR, pt.flipped, false);
+      
+      // Draw P2 ghost if applicable
+      if (pt.y2 !== null) {
+        const ghostP2 = {
+          x: DISPLAY.WIDTH * 0.8 - PLAYER_CFG.SIZE / 2,
+          y: pt.y2,
+          width: PLAYER_CFG.SIZE,
+          height: PLAYER_CFG.SIZE,
+          alive: true,
+          squishTimer: 0
+        };
+        drawPlayerShape(ghostP2, COLORS.NEON_PINK, COLORS.NEON_PINK, !pt.flipped, false);
+      }
+      ctx.restore();
+    }
+    
+    // Draw Scrubber track & handle
+    ctx.save();
+    const bounds = getScrubberBounds();
+    const trackY = bounds.y + bounds.h / 2;
+    
+    // Draw track bg
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(bounds.x, trackY);
+    ctx.lineTo(bounds.x + bounds.w, trackY);
+    ctx.stroke();
+    
+    // Draw active track
+    const pct = gs.replayIndex / (gs.lastReplay.length - 1);
+    ctx.strokeStyle = COLORS.NEON_CYAN;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(bounds.x, trackY);
+    ctx.lineTo(bounds.x + pct * bounds.w, trackY);
+    ctx.stroke();
+    
+    // Draw handle
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = COLORS.NEON_CYAN;
+    ctx.beginPath();
+    ctx.arc(bounds.x + pct * bounds.w, trackY, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    
+    // Draw text label
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '9px Orbitron, monospace';
+    ctx.fillText('DRAG SCRUBBER TO REPLAY GHOST', DISPLAY.WIDTH / 2, bounds.y + bounds.h + 10);
+    ctx.restore();
+  }
+
   ctx.restore();
 }
 
