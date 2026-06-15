@@ -5508,6 +5508,18 @@ function gameLoop(timestamp) {
     if (gs.mode === 'mirror' && gs.player2 && gs.player2.alive) {
       updateSinglePlayer(gs.player2, true, dt);
     }
+    
+    // Record replay ghost coordinates every 4 frames (30s window at 60fps / 4 = 450 frames max)
+    if (gs.frameCount % 4 === 0) {
+      gs.replayData.push({
+        y: gs.player.y,
+        flipped: gs.gravityFlipped,
+        y2: gs.player2 ? gs.player2.y : null
+      });
+      if (gs.replayData.length > 450) {
+        gs.replayData.shift();
+      }
+    }
     updateObstacles(dt);
     updateStars(dt);
     updateParticles(dt);
