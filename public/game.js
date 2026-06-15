@@ -3416,6 +3416,12 @@ function drawFloorAndCeiling() {
     } else if (gs.theme === 'aurora') {
       floorColor = '#001a0a';
       glowColor = '#00ff88';
+    } else if (gs.theme === 'winter_neon') {
+      floorColor = '#021020';
+      glowColor = '#00f0ff';
+    } else if (gs.theme === 'synthwave_sunset') {
+      floorColor = '#100220';
+      glowColor = '#ff007f';
     }
   }
   
