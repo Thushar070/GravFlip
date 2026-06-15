@@ -3239,6 +3239,8 @@ function drawBackground() {
     if (gs.theme === 'neongrid') targetBg = '#050510';
     else if (gs.theme === 'crimsonvoid') targetBg = '#100005';
     else if (gs.theme === 'aurora') targetBg = '#000a05';
+    else if (gs.theme === 'winter_neon') targetBg = '#030815';
+    else if (gs.theme === 'synthwave_sunset') targetBg = '#120224';
     
     ctx.fillStyle = targetBg;
     ctx.fillRect(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
@@ -3246,7 +3248,9 @@ function drawBackground() {
     if (gs.themeTransition && gs.themeTransition.active) {
       const fromBg = gs.themeTransition.fromTheme === 'neongrid' ? '#050510' :
                      gs.themeTransition.fromTheme === 'crimsonvoid' ? '#100005' :
-                     gs.themeTransition.fromTheme === 'aurora' ? '#000a05' : COLORS.BG;
+                     gs.themeTransition.fromTheme === 'aurora' ? '#000a05' :
+                     gs.themeTransition.fromTheme === 'winter_neon' ? '#030815' :
+                     gs.themeTransition.fromTheme === 'synthwave_sunset' ? '#120224' : COLORS.BG;
       const progress = gs.themeTransition.progress / 60;
       ctx.globalAlpha = Math.max(0, Math.min(1, 1 - progress));
       ctx.fillStyle = fromBg;
@@ -3260,6 +3264,8 @@ function drawBackground() {
       drawCrimsonCloudsAndLightning();
     } else if (gs.theme === 'aurora') {
       drawAuroraEffect();
+    } else if (gs.theme === 'synthwave_sunset') {
+      drawSynthwaveSun();
     }
   }
   ctx.restore();
