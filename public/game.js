@@ -1720,49 +1720,91 @@ function drawBackground() {
   if (gs.mode === 'campaign' && gs.campaign) {
     const w = gs.campaign.currentWorld;
     if (w === 1) {
-      ctx.fillStyle = '#0a0a1a';
-      ctx.fillRect(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
-    } else if (w === 2) {
-      ctx.fillStyle = '#0d0d0d';
+      // World 1: Cosmic Space Sky Gradient
+      const spaceGrd = ctx.createLinearGradient(0, 0, 0, DISPLAY.HEIGHT);
+      spaceGrd.addColorStop(0, '#040412');
+      spaceGrd.addColorStop(0.5, '#07071f');
+      spaceGrd.addColorStop(1, '#020208');
+      ctx.fillStyle = spaceGrd;
       ctx.fillRect(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
       
-      const cityOffset = (gs.distanceTraveled * 0.2) % 300;
+    } else if (w === 2) {
+      // World 2: Retro Cyber City Parallax
+      const cityGrd = ctx.createLinearGradient(0, 0, 0, DISPLAY.HEIGHT);
+      cityGrd.addColorStop(0, '#06010c');
+      cityGrd.addColorStop(0.6, '#0f0524');
+      cityGrd.addColorStop(1, '#05020d');
+      ctx.fillStyle = cityGrd;
+      ctx.fillRect(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
+      
+      // Layer A: Distant silhouettes (scrolling slow)
+      ctx.save();
+      const distCityOffset = (gs.distanceTraveled * 0.08) % 300;
+      const distantBuildings = [
+        { x: 10, w: 50, h: 120 }, { x: 70, w: 35, h: 90 }, { x: 120, w: 60, h: 140 },
+        { x: 190, w: 45, h: 100 }, { x: 250, w: 55, h: 130 }
+      ];
+      ctx.fillStyle = '#0a0515';
+      distantBuildings.forEach(b => {
+        let bx = b.x - distCityOffset;
+        while (bx < -b.w) bx += 300;
+        ctx.fillRect(bx, DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT - b.h, b.w, b.h);
+      });
+      ctx.restore();
+      
+      // Layer B: Closer detailed buildings (scrolling faster)
+      ctx.save();
+      const cityOffset = (gs.distanceTraveled * 0.22) % 300;
       const buildings = [
         { x: 20, w: 45, h: 180 }, { x: 85, w: 60, h: 240 }, { x: 165, w: 50, h: 150 },
         { x: 235, w: 70, h: 280 }, { x: 325, w: 55, h: 200 }, { x: 400, w: 65, h: 220 },
         { x: 485, w: 50, h: 170 }, { x: 555, w: 75, h: 260 }
       ];
-      ctx.fillStyle = '#111111';
-      buildings.forEach(b => {
+      buildings.forEach((b, bIdx) => {
         let bx = b.x - cityOffset;
         while (bx < -b.w) bx += 600;
+        
+        ctx.fillStyle = '#110d1c';
         ctx.fillRect(bx, DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT - b.h, b.w, b.h);
         
-        ctx.fillStyle = 'rgba(255, 255, 200, 0.4)';
-        for (let wx = bx + 5; wx < bx + b.w - 5; wx += 12) {
+        ctx.strokeStyle = bIdx % 2 === 0 ? 'rgba(0, 255, 255, 0.12)' : 'rgba(255, 68, 170, 0.12)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx, DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT - b.h, b.w, b.h);
+        
+        ctx.fillStyle = bIdx % 2 === 0 ? 'rgba(0, 255, 255, 0.45)' : 'rgba(255, 220, 100, 0.45)';
+        for (let wx = bx + 6; wx < bx + b.w - 6; wx += 12) {
           for (let wy = DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT - b.h + 15; wy < DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT - 10; wy += 20) {
             if (((Math.floor(wx + wy) % 5) !== 0)) {
               ctx.fillRect(wx, wy, 3, 5);
             }
           }
         }
-        ctx.fillStyle = '#111111';
       });
+      ctx.restore();
+      
     } else if (w === 3) {
-      ctx.fillStyle = '#0d0a14';
+      // World 3: Space dust and shaded asteroid belt
+      const beltGrd = ctx.createLinearGradient(0, 0, 0, DISPLAY.HEIGHT);
+      beltGrd.addColorStop(0, '#090614');
+      beltGrd.addColorStop(0.5, '#0e0b1f');
+      beltGrd.addColorStop(1, '#05040a');
+      ctx.fillStyle = beltGrd;
       ctx.fillRect(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
       
-      ctx.fillStyle = 'rgba(80, 70, 60, 0.12)';
       const driftOffset = (gs.distanceTraveled * 0.05) % 800;
       const boulders = [
-        { x: 100, y: 120, pts: [[0, 0], [40, -10], [60, 20], [30, 50], [-10, 30]] },
-        { x: 350, y: 280, pts: [[0, 0], [50, 10], [40, 40], [0, 50], [-30, 20]] },
-        { x: 600, y: 150, pts: [[0, 0], [60, -20], [80, 20], [40, 60], [-20, 30]] },
-        { x: 850, y: 220, pts: [[0, 0], [30, -15], [50, 15], [20, 45], [-15, 25]] }
+        { x: 100, y: 120, pts: [[0, 0], [40, -10], [60, 20], [30, 50], [-10, 30]], color: '#aa00ff' },
+        { x: 350, y: 280, pts: [[0, 0], [50, 10], [40, 40], [0, 50], [-30, 20]], color: '#00ffff' },
+        { x: 600, y: 150, pts: [[0, 0], [60, -20], [80, 20], [40, 60], [-20, 30]], color: '#aa00ff' },
+        { x: 850, y: 220, pts: [[0, 0], [30, -15], [50, 15], [20, 45], [-15, 25]], color: '#00ffff' }
       ];
+      
       boulders.forEach(b => {
         let bx = b.x - driftOffset;
         while (bx < -100) bx += 900;
+        
+        ctx.save();
+        ctx.fillStyle = 'rgba(25, 20, 35, 0.45)';
         ctx.beginPath();
         ctx.moveTo(bx + b.pts[0][0], b.y + b.pts[0][1]);
         for (let ptIdx = 1; ptIdx < b.pts.length; ptIdx++) {
@@ -1770,9 +1812,24 @@ function drawBackground() {
         }
         ctx.closePath();
         ctx.fill();
+        
+        ctx.strokeStyle = b.color;
+        ctx.globalAlpha = 0.2 + 0.1 * Math.sin(gs.frameCount * 0.05 + bx);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx + b.pts[0][0], b.y + b.pts[0][1]);
+        ctx.lineTo(bx + b.pts[2][0], b.y + b.pts[2][1]);
+        ctx.stroke();
+        ctx.restore();
       });
+      
     } else if (w === 4) {
-      ctx.fillStyle = '#1a0500';
+      // World 4: Lava obsidian chamber
+      const lavaGrd = ctx.createLinearGradient(0, 0, 0, DISPLAY.HEIGHT);
+      lavaGrd.addColorStop(0, '#150000');
+      lavaGrd.addColorStop(0.5, '#2e0500');
+      lavaGrd.addColorStop(1, '#150000');
+      ctx.fillStyle = lavaGrd;
       ctx.fillRect(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
       
       if (!gs.campaign.fireParticles) {
@@ -1782,31 +1839,60 @@ function drawBackground() {
             x: Math.random() * DISPLAY.WIDTH,
             y: Math.random() * DISPLAY.HEIGHT,
             size: 1 + Math.random() * 3,
-            speed: 0.5 + Math.random() * 1.5
+            speed: 0.5 + Math.random() * 1.5,
+            phase: Math.random() * Math.PI
           });
         }
       }
-      ctx.fillStyle = 'rgba(255, 120, 0, 0.25)';
+      
       gs.campaign.fireParticles.forEach(fp => {
         fp.y -= fp.speed * 0.8;
+        fp.phase += 0.02;
         if (fp.y < 0) {
           fp.y = DISPLAY.HEIGHT;
           fp.x = Math.random() * DISPLAY.WIDTH;
         }
+        
+        ctx.save();
+        const pulse = 0.7 + 0.3 * Math.sin(fp.phase);
+        const pColor = `rgba(255, ${Math.floor(80 + 80 * Math.sin(fp.phase))}, 0, ${pulse * 0.4})`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#ff6600';
+        ctx.fillStyle = pColor;
         ctx.beginPath();
         ctx.arc(fp.x, fp.y, fp.size, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
       });
+      
     } else if (w === 5) {
-      ctx.fillStyle = '#000000';
+      // World 5: Unstable Glitched Void
+      const voidGrd = ctx.createLinearGradient(0, 0, 0, DISPLAY.HEIGHT);
+      voidGrd.addColorStop(0, '#030007');
+      voidGrd.addColorStop(1, '#000002');
+      ctx.fillStyle = voidGrd;
       ctx.fillRect(0, 0, DISPLAY.WIDTH, DISPLAY.HEIGHT);
       
-      if (gs.frameCount % 30 < 2) {
-        ctx.fillStyle = '#ffffff';
-        for (let pIdx = 0; pIdx < 5; pIdx++) {
+      // Digital grid lines
+      ctx.strokeStyle = 'rgba(0, 255, 100, 0.02)';
+      ctx.lineWidth = 1;
+      const stepY = 24;
+      for (let y = 0; y < DISPLAY.HEIGHT; y += stepY) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(DISPLAY.WIDTH, y);
+        ctx.stroke();
+      }
+      
+      // Flashing glitched blocks
+      if (gs.frameCount % 25 < 4) {
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0, 255, 100, 0.08)' : 'rgba(255, 0, 100, 0.08)';
+        for (let pIdx = 0; pIdx < 6; pIdx++) {
           const px = Math.random() * DISPLAY.WIDTH;
           const py = Math.random() * DISPLAY.HEIGHT;
-          ctx.fillRect(px, py, 2, 2);
+          const pw = 15 + Math.random() * 40;
+          const ph = 2 + Math.random() * 6;
+          ctx.fillRect(px, py, pw, ph);
         }
       }
     }
