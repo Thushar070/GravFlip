@@ -1283,12 +1283,34 @@ function updateObstacles(dt) {
       if (obs.y < minY) obs.y = minY;
       if (obs.y > maxY) obs.y = maxY;
       
-      if (Math.random() < 0.1 * dt) {
+      // Emit grinding sparks if touching/near ceiling or floor
+      const nearCeiling = (obs.y - obs.radius <= ceilY + 4);
+      const nearFloor = (obs.y + obs.radius >= floorY - 4);
+      
+      if (nearCeiling || nearFloor) {
+        const sparkY = nearCeiling ? ceilY : floorY;
+        const sparkCount = Math.floor(1 + Math.random() * 3 * dt);
+        for (let sIdx = 0; sIdx < sparkCount; sIdx++) {
+          gs.particles.push({
+            x: obs.x,
+            y: sparkY + (nearCeiling ? 1 : -1) * (1 + Math.random() * 2),
+            vx: -gs.speed * 0.7 + (Math.random() - 0.7) * 4,
+            vy: (nearCeiling ? 1 : -1) * (1 + Math.random() * 3),
+            life: 12 + Math.random() * 12,
+            maxLife: 24,
+            color: '#ffa600',
+            size: 1.0 + Math.random() * 1.5
+          });
+        }
+      }
+      
+      // Regular dust/smoke trailing
+      if (Math.random() < 0.08 * dt) {
         gs.particles.push({
           x: obs.x, y: obs.y,
           vx: -gs.speed * 0.5 + (Math.random() - 0.5) * 2,
           vy: (Math.random() - 0.5) * 2,
-          life: 15, maxLife: 15, color: '#888888', size: 1.5
+          life: 15, maxLife: 15, color: 'rgba(120, 120, 130, 0.4)', size: 1.5
         });
       }
     } else if (obs.type === 'basic' && obs.isAsteroid) {
@@ -2551,31 +2573,87 @@ function drawObstacles() {
       ctx.save();
       ctx.translate(o.x, o.y);
       ctx.rotate(o.rotation);
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = '#888888';
-      ctx.fillStyle = '#cccccc';
-      ctx.strokeStyle = '#888888';
-      ctx.lineWidth = 2;
+      
+      const r = o.radius;
+      
+      // 1. Outer glow pass
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#ff5500';
+      
+      // 2. Draw 12 Aggressive Hooked Saw Teeth
+      ctx.fillStyle = '#9999aa';
+      ctx.strokeStyle = '#444455';
+      ctx.lineWidth = 1;
+      
+      const numTeeth = 12;
       ctx.beginPath();
-      ctx.arc(0, 0, o.radius - 4, 0, Math.PI * 2);
+      for (let t = 0; t < numTeeth; t++) {
+        const angle = (t / numTeeth) * Math.PI * 2;
+        const nextAngle = ((t + 1) / numTeeth) * Math.PI * 2;
+        
+        const outerX = Math.cos(angle) * r;
+        const outerY = Math.sin(angle) * r;
+        const innerX = Math.cos(nextAngle) * (r * 0.7);
+        const innerY = Math.sin(nextAngle) * (r * 0.7);
+        
+        if (t === 0) {
+          ctx.moveTo(outerX, outerY);
+        } else {
+          ctx.lineTo(outerX, outerY);
+        }
+        ctx.lineTo(innerX, innerY);
+      }
+      ctx.closePath();
       ctx.fill();
       ctx.stroke();
       
-      ctx.fillStyle = '#cccccc';
-      for (let tooth = 0; tooth < 8; tooth++) {
-        ctx.rotate(Math.PI / 4);
-        ctx.beginPath();
-        ctx.moveTo(o.radius - 4, -3);
-        ctx.lineTo(o.radius + 4, 0);
-        ctx.lineTo(o.radius - 4, 3);
-        ctx.closePath();
-        ctx.fill();
-      }
+      // 3. Draw Brushed Metal Circular Center Plate
+      ctx.shadowBlur = 0;
+      const metalGrd = ctx.createRadialGradient(0, 0, 1, 0, 0, r * 0.75);
+      metalGrd.addColorStop(0, '#ffffff');
+      metalGrd.addColorStop(0.3, '#aaaaaa');
+      metalGrd.addColorStop(0.7, '#666677');
+      metalGrd.addColorStop(0.9, '#333344');
+      metalGrd.addColorStop(1, '#888899');
       
-      ctx.fillStyle = '#ff0000';
+      ctx.fillStyle = metalGrd;
+      ctx.strokeStyle = '#444455';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(0, 0, 3, 0, Math.PI * 2);
+      ctx.arc(0, 0, r * 0.75, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
+      
+      // 4. Industrial venting slits/grooves
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      for (let ax = 0; ax < 4; ax++) {
+        const rad = (ax / 4) * Math.PI * 2;
+        ctx.moveTo(Math.cos(rad) * (r * 0.2), Math.sin(rad) * (r * 0.2));
+        ctx.lineTo(Math.cos(rad) * (r * 0.48), Math.sin(rad) * (r * 0.48));
+      }
+      ctx.stroke();
+
+      // 5. Axle Hub / Warning LED center
+      ctx.fillStyle = '#111122';
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      const pulse = 0.5 + 0.5 * Math.sin(gs.frameCount * 0.2);
+      ctx.fillStyle = 'rgba(255, 0, 0, ' + (0.5 + pulse * 0.5) + ')';
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = '#ff0000';
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      
       ctx.restore();
     } else if (o.type === 'drone') {
       ctx.save();
