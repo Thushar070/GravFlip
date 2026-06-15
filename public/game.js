@@ -2215,48 +2215,145 @@ function drawObstacles() {
       }
     } else if (o.type === 'laser') {
       ctx.save();
-      ctx.fillStyle = '#333333';
-      ctx.strokeStyle = '#666666';
-      ctx.lineWidth = 1.5;
-      
       const emitterH = 12;
       const emitterW = 20;
       const eX = o.x + o.width/2 - emitterW/2;
-      
-      ctx.fillRect(eX, DISPLAY.FLOOR_HEIGHT, emitterW, emitterH);
-      ctx.strokeRect(eX, DISPLAY.FLOOR_HEIGHT, emitterW, emitterH);
-      
       const bY = DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT - emitterH;
-      ctx.fillRect(eX, bY, emitterW, emitterH);
-      ctx.strokeRect(eX, bY, emitterW, emitterH);
+      const laserStartY = DISPLAY.FLOOR_HEIGHT + emitterH;
+      const laserEndY = bY;
+      const laserLength = laserEndY - laserStartY;
+
+      // 1. Draw Emitter Nozzles (Top and Bottom)
+      ctx.save();
+      ctx.fillStyle = '#1e1e2f';
+      ctx.strokeStyle = '#4e4e6f';
+      ctx.lineWidth = 2;
       
-      ctx.fillStyle = o.state === 'on' ? '#ff3333' : o.state === 'warn' ? '#ffbb00' : '#33cc33';
+      // Top nozzle
+      roundRect(ctx, eX, DISPLAY.FLOOR_HEIGHT, emitterW, emitterH, 2);
+      ctx.fill(); ctx.stroke();
+      
+      // Bottom nozzle
+      roundRect(ctx, eX, bY, emitterW, emitterH, 2);
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+
+      // 2. Nozzle LED lights
+      ctx.save();
+      let ledColor = '#33cc33';
+      if (o.state === 'on') ledColor = '#ff3333';
+      else if (o.state === 'warn') ledColor = '#ffaa00';
+
+      ctx.fillStyle = ledColor;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = ledColor;
       ctx.beginPath(); ctx.arc(eX + emitterW/2, DISPLAY.FLOOR_HEIGHT + emitterH/2, 2.5, 0, Math.PI * 2); ctx.fill();
       ctx.beginPath(); ctx.arc(eX + emitterW/2, bY + emitterH/2, 2.5, 0, Math.PI * 2); ctx.fill();
-      
+      ctx.restore();
+
+      // 3. Draw Laser Beam
       if (o.state === 'on') {
-        ctx.strokeStyle = '#ff3333';
-        ctx.lineWidth = 2.5;
-        ctx.shadowBlur = 12; ctx.shadowColor = '#ff3333';
+        const flicker = 0.85 + 0.15 * Math.random();
+        
+        // Pass A: Wide soft outer glow
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 50, 50, 0.25)';
+        ctx.lineWidth = (16 + 2 * Math.sin(gs.frameCount * 0.8)) * flicker;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ff3333';
         ctx.beginPath();
-        ctx.moveTo(o.x + o.width/2, DISPLAY.FLOOR_HEIGHT + emitterH);
-        ctx.lineTo(o.x + o.width/2, bY);
+        ctx.moveTo(o.x + o.width/2, laserStartY);
+        ctx.lineTo(o.x + o.width/2, laserEndY);
         ctx.stroke();
+        ctx.restore();
+
+        // Pass B: Medium bright glow
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 50, 50, 0.8)';
+        ctx.lineWidth = (6 + 1 * Math.sin(gs.frameCount * 1.5)) * flicker;
+        ctx.beginPath();
+        ctx.moveTo(o.x + o.width/2, laserStartY);
+        ctx.lineTo(o.x + o.width/2, laserEndY);
+        ctx.stroke();
+        ctx.restore();
+
+        // Pass C: Inner white-hot core
+        ctx.save();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.2 * flicker;
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(o.x + o.width/2, laserStartY);
+        ctx.lineTo(o.x + o.width/2, laserEndY);
+        ctx.stroke();
+        ctx.restore();
+
+        // 4. Power Rings (Moving energy pulses)
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 220, 220, 0.75)';
+        ctx.lineWidth = 1;
+        const ringSpeed = 3;
+        const rHeight = 3;
+        const t1 = (gs.frameCount * ringSpeed) % laserLength;
+        const t2 = ((gs.frameCount * ringSpeed) + laserLength / 2) % laserLength;
+
+        [t1, t2].forEach(offset => {
+          const ry = laserStartY + offset;
+          ctx.beginPath();
+          ctx.ellipse(o.x + o.width/2, ry, 6, rHeight, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+        ctx.restore();
+
+        // 5. Lens Flares at Top/Bottom nozzle outlets
+        ctx.save();
+        [laserStartY, laserEndY].forEach(flareY => {
+          const flareGrd = ctx.createRadialGradient(o.x + o.width/2, flareY, 1, o.x + o.width/2, flareY, 9);
+          flareGrd.addColorStop(0, '#ffffff');
+          flareGrd.addColorStop(0.3, '#ff3333');
+          flareGrd.addColorStop(1, 'rgba(255, 50, 50, 0)');
+          ctx.fillStyle = flareGrd;
+          ctx.beginPath();
+          ctx.arc(o.x + o.width/2, flareY, 9, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+
       } else if (o.state === 'warn') {
         const pulse = 0.4 + 0.6 * Math.sin(gs.frameCount * 0.4);
+        
+        ctx.save();
         ctx.strokeStyle = 'rgba(255, 187, 0, ' + pulse + ')';
-        ctx.lineWidth = 1.5;
-        ctx.shadowBlur = 6; ctx.shadowColor = '#ffbb00';
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#ffbb00';
         ctx.beginPath();
-        ctx.moveTo(o.x + o.width/2, DISPLAY.FLOOR_HEIGHT + emitterH);
-        ctx.lineTo(o.x + o.width/2, bY);
+        ctx.moveTo(o.x + o.width/2, laserStartY);
+        ctx.lineTo(o.x + o.width/2, laserEndY);
         ctx.stroke();
+        ctx.restore();
+        
+        // Minor lens flare pulse for warning
+        ctx.save();
+        [laserStartY, laserEndY].forEach(flareY => {
+          const flareGrd = ctx.createRadialGradient(o.x + o.width/2, flareY, 0.5, o.x + o.width/2, flareY, 5);
+          flareGrd.addColorStop(0, 'rgba(255, 255, 255, ' + pulse + ')');
+          flareGrd.addColorStop(1, 'rgba(255, 187, 0, 0)');
+          ctx.fillStyle = flareGrd;
+          ctx.beginPath();
+          ctx.arc(o.x + o.width/2, flareY, 5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
       }
       
-      ctx.fillStyle = o.state === 'on' ? '#ff3333' : '#aaaaaa';
-      ctx.font = '8px Orbitron, monospace';
+      // Draw Laser Label
+      ctx.fillStyle = o.state === 'on' ? '#ff4444' : '#888899';
+      ctx.font = 'bold 8px "Orbitron", monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('LASER', o.x + o.width/2, DISPLAY.FLOOR_HEIGHT + emitterH + 12);
+      ctx.shadowBlur = 0;
+      ctx.fillText('LASER', o.x + o.width/2, laserStartY + 12);
       ctx.restore();
     } else if (o.type === 'crusher') {
       ctx.save();
