@@ -3013,13 +3013,69 @@ function draw4PointStarPath(c, cx, cy, spikes, outerRadius, innerRadius) {
 }
 
 function drawTrailFor(p, color) {
-  for (let i = 0; i < p.trail.length; i++) {
+  if (!p.trail || p.trail.length < 2) return;
+  ctx.save();
+  
+  const isP2 = color.includes('255,68,170');
+  const glowColor = isP2 ? COLORS.NEON_PINK : COLORS.NEON_CYAN;
+  
+  const head = p.trail[p.trail.length - 1];
+  const tail = p.trail[0];
+  
+  // 1. Create linear gradient along length of trail
+  const trailGrd = ctx.createLinearGradient(tail.x, 0, head.x, 0);
+  trailGrd.addColorStop(0, color.replace('1)', '0.0)'));
+  trailGrd.addColorStop(0.5, color.replace('1)', '0.18)'));
+  trailGrd.addColorStop(1, color.replace('1)', '0.45)'));
+  
+  // 2. Draw Tapered Ribbon Path
+  ctx.beginPath();
+  ctx.moveTo(tail.x, tail.y + p.height / 2);
+  
+  for (let i = 1; i < p.trail.length; i++) {
     const t = p.trail[i];
-    const alpha = ((i + 1) / p.trail.length) * 0.35;
-    const size = p.width * ((i + 1) / p.trail.length) * 0.7;
-    ctx.fillStyle = color.replace('1)', alpha + ')');
-    ctx.fillRect(t.x - size * 0.1, t.y + (p.height - size) / 2, size * 0.6, size);
+    const size = p.height * (i / p.trail.length) * 0.75;
+    ctx.lineTo(t.x, t.y + (p.height - size) / 2);
   }
+  
+  ctx.lineTo(head.x, head.y);
+  ctx.lineTo(head.x, head.y + p.height);
+  
+  for (let i = p.trail.length - 1; i >= 1; i--) {
+    const t = p.trail[i];
+    const size = p.height * (i / p.trail.length) * 0.75;
+    ctx.lineTo(t.x, t.y + (p.height + size) / 2);
+  }
+  
+  ctx.closePath();
+  
+  // Draw outer glow trail pass
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = glowColor;
+  ctx.fillStyle = trailGrd;
+  ctx.fill();
+  ctx.restore();
+  
+  // 3. Draw a white-hot inner core line along the spine of the trail
+  ctx.save();
+  ctx.shadowBlur = 4;
+  ctx.shadowColor = '#ffffff';
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.2;
+  
+  const coreGrd = ctx.createLinearGradient(tail.x, 0, head.x, 0);
+  coreGrd.addColorStop(0, 'rgba(255, 255, 255, 0.0)');
+  coreGrd.addColorStop(1, 'rgba(255, 255, 255, 0.7)');
+  ctx.strokeStyle = coreGrd;
+  
+  ctx.beginPath();
+  ctx.moveTo(tail.x, tail.y + p.height / 2);
+  for (let i = 1; i < p.trail.length; i++) {
+    const t = p.trail[i];
+    ctx.lineTo(t.x, t.y + p.height / 2);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawEngineGlow(p, isP2) {
