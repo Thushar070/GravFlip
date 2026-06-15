@@ -764,6 +764,7 @@ const ProfileUI = {
     const suit = this.colorSuit.value;
     const accent = this.colorAccent.value;
     const emblem = this.selectEmblem.value;
+    const selectedTheme = this.selectSeasonalTheme ? this.selectSeasonalTheme.value : 'none';
 
     try {
       const res = await fetch('/api/profile/update', {
@@ -771,12 +772,21 @@ const ProfileUI = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: clientProfile.id,
-          avatar: { helmet, visor, suit, accent, emblem }
+          avatar: { helmet, visor, suit, accent, emblem },
+          selectedTheme
         })
       });
       if (res.ok) {
         const data = await res.json();
         clientProfile = data.profile;
+        if (gs.screen !== 'playing') {
+          if (clientProfile.selectedTheme && clientProfile.selectedTheme !== 'none') {
+            gs.theme = clientProfile.selectedTheme;
+          } else {
+            gs.theme = 'deepspace';
+          }
+          updateNebulaColors();
+        }
       }
     } catch (e) {
       console.error(e);
