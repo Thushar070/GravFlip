@@ -5655,6 +5655,14 @@ function gameLoop(timestamp) {
   } else if (gs.screen === 'dead') {
     updateParticles(dt);
     gs.frameCount++;
+    
+    // Auto-advance replay ghost preview
+    if (gs.lastReplay && gs.lastReplay.length > 0 && !gs.isScrubbing) {
+      if (gs.frameCount % 3 === 0) {
+        gs.replayIndex = (gs.replayIndex + 1) % gs.lastReplay.length;
+      }
+    }
+
     if (gs.newBest && gs.mode !== 'campaign' && !gs.namePromptShown) {
       gs.newBestTimer += dt * 16.67;
       if (gs.newBestTimer >= 1000) {
