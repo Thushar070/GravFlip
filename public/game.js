@@ -3021,6 +3021,38 @@ function drawAuroraEffect() {
   ctx.restore();
 }
 
+function drawSynthwaveSun() {
+  ctx.save();
+  const sunX = DISPLAY.WIDTH / 2;
+  const sunY = DISPLAY.HEIGHT - DISPLAY.FLOOR_HEIGHT - 10;
+  const r = 90;
+  
+  // Radial gradient for neon sun (yellow to hot pink to dark purple)
+  const g = ctx.createLinearGradient(sunX, sunY - r, sunX, sunY);
+  g.addColorStop(0, '#ffcc00'); // Gold
+  g.addColorStop(0.5, '#ff007f'); // Hot pink
+  g.addColorStop(1, '#8800ff'); // Violet
+  
+  ctx.shadowBlur = 25;
+  ctx.shadowColor = '#ff007f';
+  ctx.fillStyle = g;
+  
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, r, Math.PI, 0, false);
+  ctx.fill();
+  
+  // Horizontal cut lines
+  ctx.restore();
+  ctx.save();
+  ctx.fillStyle = '#120224'; // matches synthwave_sunset BG
+  for (let y = sunY - r; y < sunY; y += 8) {
+    const progress = (y - (sunY - r)) / r;
+    const sliceHeight = 2 + progress * 4;
+    ctx.fillRect(sunX - r - 10, y, (r + 10) * 2, sliceHeight);
+  }
+  ctx.restore();
+}
+
 function drawBackground() {
   ctx.save();
   if (gs.mode === 'campaign' && gs.campaign) {
