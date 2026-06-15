@@ -4932,6 +4932,26 @@ function drawCampaignIcon(cx, cy, color) {
   ctx.restore();
 }
 
+function drawDailyIcon(cx, cy, color) {
+  ctx.save();
+  ctx.fillStyle = color;
+  roundRect(ctx, cx - 12, cy - 10, 24, 22, 3);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(cx - 12, cy - 10, 24, 6);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(cx - 7, cy - 13, 2, 5);
+  ctx.fillRect(cx + 5, cy - 13, 2, 5);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(cx - 6, cy + 2, 4, 4);
+  ctx.fillRect(cx, cy + 2, 4, 4);
+  ctx.fillRect(cx + 2, cy + 2, 4, 4);
+  ctx.fillRect(cx - 6, cy + 8, 4, 4);
+  ctx.fillRect(cx, cy + 8, 4, 4);
+  ctx.fillRect(cx + 2, cy + 8, 4, 4);
+  ctx.restore();
+}
+
 function drawModeSelectScreen() {
   if (gs.screen !== 'modeselect') return;
   ctx.fillStyle = 'rgba(10,10,26,0.82)';
@@ -4945,8 +4965,8 @@ function drawModeSelectScreen() {
   ctx.fillText('SELECT MODE', DISPLAY.WIDTH / 2, 52);
   ctx.shadowBlur = 0;
 
-  const cardW = 150, cardH = 210, gap = 16;
-  const totalW = cardW * 4 + gap * 3;
+  const cardW = 135, cardH = 210, gap = 12;
+  const totalW = cardW * 5 + gap * 4;
   const startX = (DISPLAY.WIDTH - totalW) / 2;
   const cardY = 80;
 
@@ -4954,7 +4974,8 @@ function drawModeSelectScreen() {
     { name: 'CLASSIC', desc: ['The original.', 'Survive as long as you can.'], color: COLORS.NEON_CYAN, icon: drawClassicIcon },
     { name: 'MIRROR', desc: ['Two players. One screen.', 'Both must survive.'], color: COLORS.NEON_PINK, icon: drawMirrorIcon },
     { name: 'BLITZ', desc: ['Speed keeps rising.', 'Never slows down.'], color: COLORS.NEON_ORANGE, icon: drawBlitzIcon },
-    { name: 'CAMPAIGN', desc: ['5 worlds. Each with', 'a unique challenge.'], color: '#ffd700', icon: drawCampaignIcon }
+    { name: 'CAMPAIGN', desc: ['5 worlds. Each with', 'a unique challenge.'], color: '#ffd700', icon: drawCampaignIcon },
+    { name: 'DAILY', desc: [dailyChallenge ? dailyChallenge.modifierName : 'DAILY RUN', 'Special seeded run.'], color: '#bb66ff', icon: drawDailyIcon }
   ];
 
   modes.forEach((m, i) => {
@@ -5013,6 +5034,13 @@ function drawModeSelectScreen() {
           ctx.ellipse(px, dotY, dotRadius + 3, dotRadius - 2, Math.PI/6, 0, Math.PI*2);
           ctx.stroke();
         }
+      }
+    } else if (i === 4) {
+      const dailyBest = dailyChallenge ? loadHighScore('daily_' + dailyChallenge.date) : 0;
+      if (dailyBest > 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.font = '9px Orbitron, monospace';
+        ctx.fillText('BEST: ' + dailyBest, x + cardW / 2, cardY + cardH - 18);
       }
     } else {
       const modeBest = loadHighScore(['classic', 'mirror', 'blitz'][i]);
