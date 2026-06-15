@@ -2399,8 +2399,42 @@ function updateEngineFlash(dt) {
 
 function checkPlayerObstacleCollision(p, who) {
   if (!p.alive) return;
+  
+  let anyClose = false;
+
   for (let i = 0; i < gs.obstacles.length; i++) {
     const o = gs.obstacles[i];
+    
+    // Check close call (within 8 pixels clearance)
+    let isClose = false;
+    if (o.type === 'basic' || o.type === 'crusher' || o.type === 'drone' || o.type === 'firewave' || o.type === 'phantom') {
+      const dx = Math.abs((p.x + p.width/2) - (o.x + o.width/2));
+      const dy = Math.abs((p.y + p.height/2) - (o.y + o.height/2));
+      const clearanceX = dx - (p.width/2 + o.width/2);
+      const clearanceY = dy - (p.height/2 + o.height/2);
+      if (clearanceX >= 0 && clearanceX < 8 && clearanceY >= 0 && clearanceY < 8) {
+        isClose = true;
+      }
+    } else if (o.type === 'laser') {
+      if (o.state === 'on') {
+        const laserX = o.x + o.width / 2;
+        const distToLaser = Math.abs((p.x + p.width / 2) - laserX) - (p.width / 2);
+        if (distToLaser >= 0 && distToLaser < 8) {
+          isClose = true;
+        }
+      }
+    } else if (o.type === 'saw') {
+      const dist = Math.sqrt(Math.pow((p.x + p.width/2) - o.x, 2) + Math.pow((p.y + p.height/2) - o.y, 2));
+      const clearance = dist - (o.radius + p.width/2);
+      if (clearance >= 0 && clearance < 8) {
+        isClose = true;
+      }
+    }
+
+    if (isClose) {
+      anyClose = true;
+    }
+
     if (o.type === 'basic' || o.type === 'crusher' || o.type === 'drone' || o.type === 'firewave') {
       if (aabbOverlap(p.x, p.y, p.width, p.height, o.x, o.y, o.width, o.height)) {
         const overlapX = Math.min(p.x + p.width, o.x + o.width) - Math.max(p.x, o.x);
@@ -2441,6 +2475,18 @@ function checkPlayerObstacleCollision(p, who) {
       if (circleRectCollide(o.x, o.y, o.radius, p.x, p.y, p.width, p.height)) {
         killPlayer(who); return;
       }
+    }
+  }
+
+  if (who === 'p1') {
+    if (anyClose) {
+      if (!gs.modeStats.closeCallDebounce) {
+        gs.modeStats.closeCalls = (gs.modeStats.closeCalls || 0) + 1;
+        gs.modeStats.closeCallDebounce = true;
+        spawnPopup('CLOSE CALL!', p.x + p.width / 2, p.y - 15, COLORS.NEON_ORANGE, 13);
+      }
+    } else {
+      gs.modeStats.closeCallDebounce = false;
     }
   }
 }
