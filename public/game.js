@@ -66,17 +66,33 @@ const API = {
     } catch (e) { return []; }
   },
 
+  async getDailyLeaderboard(date) {
+    try {
+      const queryDate = date || (dailyChallenge ? dailyChallenge.date : new Date().toISOString().split('T')[0]);
+      const res = await fetch(`/api/daily/leaderboard?date=${queryDate}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.scores || [];
+    } catch (e) { return []; }
+  },
+
   async submitScore(score, playerName, gameData) {
     if (!this.sessionId || this.sessionId.startsWith('offline_')) return false;
     try {
       const token = await this._signScore(score, this.sessionId, gameData);
-      const res = await fetch('/api/scores', {
+      const isDaily = gs.mode === 'daily';
+      const url = isDaily ? '/api/daily/submit' : '/api/scores';
+      const body = isDaily
+        ? { score, playerName, token, gameData, date: dailyChallenge ? dailyChallenge.date : new Date().toISOString().split('T')[0] }
+        : { score, playerName, token, gameData };
+
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Session-ID': this.sessionId
         },
-        body: JSON.stringify({ score, playerName, token, gameData })
+        body: JSON.stringify(body)
       });
       return res.ok;
     } catch (e) { return false; }
