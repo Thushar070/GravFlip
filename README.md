@@ -47,19 +47,24 @@ cd GravFlip
 ```
 
 ### 3. Run the Game
-Since the game is a static site with no complex build steps or dependencies, you can run it using a simple local web server.
 
-Run the following command depending on your environment:
+The project has been upgraded to a full-stack structure with a `public` folder for the frontend and an `api` folder for the serverless backend.
 
-#### Using Python (Recommended)
+#### Install Dependencies
 ```bash
-python3 -m http.server 8080
+npm install
 ```
 
-#### Using Node.js (npx)
+#### Run Locally (Frontend only - Offline Mode)
 ```bash
-npx serve .
+npm start
 ```
+This runs the game using `npx serve public -l 3000`. The game will gracefully run in offline mode without the backend. Open **http://localhost:3000**.
 
-After running one of the commands above, open your web browser and navigate to:
-**http://localhost:8080** (or the port specified by the command output) to start playing!
+#### Run Full-Stack (Requires Vercel & KV)
+```bash
+cp .env.example .env
+# Add your Vercel KV credentials to .env
+npm run dev
+```
+This uses `vercel dev` to run the backend APIs and serve the frontend simultaneously.
