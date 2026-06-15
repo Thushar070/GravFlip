@@ -166,6 +166,7 @@ async function fetchClientProfileOnBoot() {
       campaign: { currentWorld: 1, starsPerWorld: [0, 0, 0, 0, 0], completed: false },
       achievements: [],
       badges: [],
+      selectedTheme: 'none',
       friends: [],
       friendRequestsSent: [],
       friendRequestsReceived: []
