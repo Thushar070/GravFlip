@@ -897,6 +897,8 @@ function killPlayer(who) {
       gs.highScore = gs.score;
       saveHighScore(gs.mode, gs.highScore);
       gs.newBest = true;
+      gs.namePromptShown = false;
+      gs.newBestTimer = 0;
     }
   }
 }
@@ -3449,6 +3451,13 @@ function gameLoop(timestamp) {
   } else if (gs.screen === 'dead') {
     updateParticles(dt);
     gs.frameCount++;
+    if (gs.newBest && gs.mode !== 'campaign' && !gs.namePromptShown) {
+      gs.newBestTimer += dt * 16.67;
+      if (gs.newBestTimer >= 1000) {
+        gs.namePromptShown = true;
+        showNameEntry(gs.score);
+      }
+    }
   } else if (gs.screen === 'worldcomplete') {
     gs.frameCount++;
   } else if (gs.screen === 'gamecomplete') {
