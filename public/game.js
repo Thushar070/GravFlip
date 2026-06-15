@@ -5809,6 +5809,26 @@ function gameLoop(timestamp) {
   if (dt > 3) dt = 3;
   lastTime = timestamp;
 
+  // Frame timing integrity checks using performance.now()
+  if (gs.screen === 'playing' && gs.player && gs.player.alive) {
+    if (!gs._timeCheckStart) {
+      gs._timeCheckStart = performance.now();
+      gs._frameCountStart = gs.frameCount;
+    } else {
+      const elapsedWallClock = performance.now() - gs._timeCheckStart;
+      const elapsedFrames = gs.frameCount - gs._frameCountStart;
+      if (elapsedWallClock > 2000) {
+        const expectedTimeMin = elapsedFrames * 12; // Allow up to 83 FPS
+        const expectedTimeMax = elapsedFrames * 45; // Allow down to 22 FPS
+        if (elapsedWallClock < expectedTimeMin || elapsedWallClock > expectedTimeMax) {
+          gs.timingTampered = true;
+        }
+        gs._timeCheckStart = performance.now();
+        gs._frameCountStart = gs.frameCount;
+      }
+    }
+  }
+
   // Poll recent scores for spectator ticker every 15 seconds
   if (timestamp - lastTickerFetchTime > 15000) {
     lastTickerFetchTime = timestamp;
