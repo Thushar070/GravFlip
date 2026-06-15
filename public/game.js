@@ -2483,21 +2483,69 @@ function drawObstacles() {
       ctx.restore();
     } else if (o.type === 'phantom') {
       ctx.save();
-      ctx.globalAlpha = o.revealed ? 0.15 : 0.4;
-      ctx.fillStyle = o.revealed ? '#00ff44' : '#aa44ff';
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = o.revealed ? '#00ff44' : '#aa44ff';
-      ctx.fillRect(o.x, o.y, o.width, o.height);
-      ctx.strokeStyle = o.revealed ? '#00ff44' : '#aa44ff';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(o.x, o.y, o.width, o.height);
       
-      ctx.globalAlpha = o.revealed ? 0.3 : 0.8;
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 18px Orbitron, monospace';
+      const isOk = o.revealed;
+      const themeColor = isOk ? '#00ff66' : '#aa44ff';
+      const fillOpacity = isOk ? 0.08 : 0.25;
+      
+      // 1. Holographic outer glow
+      ctx.shadowBlur = 10 + 4 * Math.sin(gs.frameCount * 0.1);
+      ctx.shadowColor = themeColor;
+      ctx.fillStyle = themeColor;
+      ctx.globalAlpha = fillOpacity;
+      roundRect(ctx, o.x, o.y, o.width, o.height, 4);
+      ctx.fill();
+      
+      // 2. Holographic border (pulsing thickness)
+      ctx.globalAlpha = 1.0;
+      ctx.shadowBlur = 4;
+      ctx.strokeStyle = themeColor;
+      ctx.lineWidth = isOk ? 1.5 : (1.5 + 0.8 * Math.sin(gs.frameCount * 0.15));
+      ctx.stroke();
+      ctx.restore();
+      
+      // 3. Draw internal hologram grid mesh
+      ctx.save();
+      ctx.beginPath();
+      roundRect(ctx, o.x, o.y, o.width, o.height, 4);
+      ctx.clip();
+      
+      ctx.strokeStyle = themeColor;
+      ctx.globalAlpha = isOk ? 0.04 : 0.12;
+      ctx.lineWidth = 1;
+      
+      // Draw grid lines
+      const step = 8;
+      for (let gx = o.x; gx < o.x + o.width; gx += step) {
+        ctx.beginPath(); ctx.moveTo(gx, o.y); ctx.lineTo(gx, o.y + o.height); ctx.stroke();
+      }
+      for (let gy = o.y; gy < o.y + o.height; gy += step) {
+        ctx.beginPath(); ctx.moveTo(o.x, gy); ctx.lineTo(o.x + o.width, gy); ctx.stroke();
+      }
+      
+      // 4. Moving Holographic scanline
+      ctx.globalAlpha = isOk ? 0.15 : 0.45;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      const scanY = o.y + ((gs.frameCount * 1.5 + i * 20) % o.height);
+      ctx.beginPath();
+      ctx.moveTo(o.x + 2, scanY);
+      ctx.lineTo(o.x + o.width - 2, scanY);
+      ctx.stroke();
+      ctx.restore();
+      
+      // 5. Centered holographic label (? or OK)
+      ctx.save();
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = 6;
+      ctx.fillStyle = isOk ? '#55ff99' : '#e0bbff';
+      ctx.font = '900 20px "Orbitron", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(o.revealed ? 'OK' : '?', o.x + o.width / 2, o.y + o.height / 2);
+      
+      // Subtle float effect on the text
+      const textBob = 1.5 * Math.sin(gs.frameCount * 0.08 + i);
+      ctx.fillText(isOk ? 'OK' : '?', o.x + o.width / 2, o.y + o.height / 2 + textBob);
       ctx.restore();
     } else if (o.type === 'saw') {
       ctx.save();
