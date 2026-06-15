@@ -1562,6 +1562,7 @@ function circleRectCollide(cx, cy, r, rx, ry, rw, rh) {
 // ═══════════════════════════════════════════════════════════════
 function flipGravity() {
   gs.gravityFlipped = !gs.gravityFlipped;
+  gs.modeStats.flips = (gs.modeStats.flips || 0) + 1;
   const p = gs.player;
   p.squishTimer = PLAYER_CFG.SQUISH_FRAMES;
   p.squishDirection = gs.gravityFlipped ? -1 : 1;
