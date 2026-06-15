@@ -4031,17 +4031,23 @@ function drawPlayerShape(p, bodyColor, visorColor, isFlipped, hasCoyote) {
   if (p.squishTimer > 0) { const t = p.squishTimer / PLAYER_CFG.SQUISH_FRAMES; scaleY = 0.6 + 0.4 * (1 - t); }
   ctx.translate(cx, cy); ctx.scale(1, scaleY); ctx.translate(-cx, -cy);
 
+  const bx = p.x, by = p.y, bw = p.width, bh = p.height, r = 6;
+  const isP2 = (bodyColor === COLORS.NEON_PINK);
+  
+  // Custom colors from profile
+  let colHelmet = isP2 ? '#221133' : (clientProfile?.avatar?.helmet || '#ffffff');
+  let colSuit = isP2 ? '#33001a' : (clientProfile?.avatar?.suit || '#ffffff');
+  let colVisor = isP2 ? COLORS.NEON_PINK : (clientProfile?.avatar?.visor || COLORS.VISOR);
+  let colAccent = isP2 ? COLORS.NEON_PINK : (clientProfile?.avatar?.accent || COLORS.NEON_CYAN);
+  let colEmblem = isP2 ? 'orb' : (clientProfile?.avatar?.emblem || 'star');
+
   // Coyote time warning glow or regular glow
   if (hasCoyote && gs.coyoteTimer > 0) {
     ctx.shadowBlur = 18; ctx.shadowColor = '#ff8800';
   } else {
-    ctx.shadowBlur = 10; ctx.shadowColor = bodyColor;
+    ctx.shadowBlur = 10; ctx.shadowColor = colAccent;
   }
 
-  const bx = p.x, by = p.y, bw = p.width, bh = p.height, r = 6;
-  const isP2 = (bodyColor === COLORS.NEON_PINK);
-  const glowColor = isP2 ? COLORS.NEON_PINK : COLORS.NEON_CYAN;
-  
   // 1. Draw Backpack / Life Support Tank
   ctx.save();
   ctx.fillStyle = '#222233';
@@ -4051,37 +4057,59 @@ function drawPlayerShape(p, bodyColor, visorColor, isFlipped, hasCoyote) {
   ctx.fill(); ctx.stroke();
   ctx.restore();
   
-  // 2. Draw Space Suit Body
+  // 2. Draw Space Suit Body (Helmet top, suit bottom)
   ctx.save();
-  const suitGrd = ctx.createLinearGradient(bx, by, bx, by + bh);
-  if (bodyColor === COLORS.PLAYER) {
-    suitGrd.addColorStop(0, '#ffffff');
-    suitGrd.addColorStop(0.6, '#e0e0f0');
-    suitGrd.addColorStop(1, '#a0a0c0');
-  } else {
-    suitGrd.addColorStop(0, bodyColor);
-    suitGrd.addColorStop(1, '#33001a');
-  }
-  ctx.fillStyle = suitGrd;
+  ctx.beginPath();
   roundRect(ctx, bx, by, bw, bh, r);
+  ctx.closePath();
+  
+  const suitGrd = ctx.createLinearGradient(bx, by, bx, by + bh);
+  suitGrd.addColorStop(0, colHelmet);
+  suitGrd.addColorStop(0.4, colHelmet);
+  suitGrd.addColorStop(0.45, '#111122');
+  suitGrd.addColorStop(0.5, colSuit);
+  suitGrd.addColorStop(1, colSuit);
+  
+  ctx.fillStyle = suitGrd;
   ctx.fill();
   
-  // Suit outline for extra resolution
   ctx.strokeStyle = '#222233';
   ctx.lineWidth = 1.2;
   ctx.stroke();
   ctx.restore();
 
-  // 3. Draw Suit Details (Belt, Collar, Glowing chest stripe)
+  // 3. Draw Suit Details (Belt, Collar, Glowing chest stripe, Emblem)
   ctx.save();
-  ctx.fillStyle = '#22223e';
+  ctx.fillStyle = '#111122';
   ctx.fillRect(bx + 2, by + bh * 0.42, bw - 4, 2); // Collar
   ctx.fillRect(bx + 1, by + bh * 0.72, bw - 2, 2.5); // Belt
   
-  ctx.fillStyle = glowColor;
+  ctx.fillStyle = colAccent;
   ctx.shadowBlur = 6;
-  ctx.shadowColor = glowColor;
+  ctx.shadowColor = colAccent;
   ctx.fillRect(bx + bw * 0.15, by + bh * 0.52, bw * 0.35, 2); // Chest light
+  
+  // Draw Emblem
+  const emX = bx + bw * 0.7;
+  const emY = by + bh * 0.53;
+  ctx.fillStyle = colAccent;
+  ctx.beginPath();
+  if (colEmblem === 'star') {
+    draw4PointStarPath(ctx, emX, emY, 4, 4, 1.5);
+    ctx.fill();
+  } else if (colEmblem === 'orb') {
+    ctx.arc(emX, emY, 3, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (colEmblem === 'cross') {
+    ctx.fillRect(emX - 3, emY - 1, 6, 2);
+    ctx.fillRect(emX - 1, emY - 3, 2, 6);
+  } else if (colEmblem === 'delta') {
+    ctx.moveTo(emX, emY - 3);
+    ctx.lineTo(emX - 3, emY + 3);
+    ctx.lineTo(emX + 3, emY + 3);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.restore();
 
   // 4. Draw Helmet Visor
@@ -4097,8 +4125,8 @@ function drawPlayerShape(p, bodyColor, visorColor, isFlipped, hasCoyote) {
   ctx.save();
   ctx.globalAlpha = 0.6;
   ctx.shadowBlur = 8;
-  ctx.shadowColor = visorColor;
-  ctx.fillStyle = visorColor;
+  ctx.shadowColor = colVisor;
+  ctx.fillStyle = colVisor;
   roundRect(ctx, vx + 0.8, vy + 0.8, vw - 1.6, vh - 1.6, vr - 1);
   ctx.fill();
   ctx.restore();
@@ -4119,7 +4147,7 @@ function drawPlayerShape(p, bodyColor, visorColor, isFlipped, hasCoyote) {
   // 5. Draw Helmet Antennae
   ctx.save();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = glowColor;
+  ctx.fillStyle = colAccent;
   const antY = isFlipped ? by + bh + 3 : by - 3;
   ctx.beginPath(); ctx.arc(bx + bw * 0.35, antY, 2, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(bx + bw * 0.65, antY, 2, 0, Math.PI * 2); ctx.fill();
