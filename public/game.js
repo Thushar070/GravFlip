@@ -1818,8 +1818,9 @@ function generateObstacle() {
   let type = 'basic';
   const distAtSpawn = gs.distanceTraveled + (gs.nextObstacleX - gs.player.x);
   
+  const activeSubMode = (gs.mode === 'daily' && gs.daily) ? gs.daily.mode : gs.mode;
   const isCampaignEligible = gs.mode === 'campaign' && gs.campaign && gs.campaign.currentWorld >= 2;
-  const isOtherModeEligible = gs.mode !== 'campaign' && (gs.currentZone >= 2 || gs.mode === 'blitz');
+  const isOtherModeEligible = gs.mode !== 'campaign' && (gs.currentZone >= 2 || activeSubMode === 'blitz');
   
   if ((isCampaignEligible || isOtherModeEligible) && gs.lastObstacleType === 'basic') {
     const candidates = [];
@@ -1829,6 +1830,9 @@ function generateObstacle() {
     if (distAtSpawn - gs.lastSawDist >= gs.sawInterval) candidates.push('saw');
     
     if (candidates.length > 0) {
+      if (gs.mode === 'daily' && gs.daily?.modifier === 'saw_heavy' && candidates.includes('saw')) {
+        candidates.push('saw');
+      }
       type = candidates[Math.floor(gameRandom() * candidates.length)];
     }
   }
@@ -1836,7 +1840,7 @@ function generateObstacle() {
   if (type === 'basic') {
     const fromFloor = gameRandom() > 0.5;
     const w = GAMEPLAY.OBSTACLE_MIN_W + gameRandom() * (GAMEPLAY.OBSTACLE_MAX_W - GAMEPLAY.OBSTACLE_MIN_W);
-    const gapMult = gs.mode === 'blitz' ? 0.8 : 1;
+    const gapMult = activeSubMode === 'blitz' ? 0.8 : 1;
     const minGap = GAMEPLAY.MIN_GAP * gapMult;
     const maxH = playH - minGap;
     const h = 40 + gameRandom() * Math.max(1, maxH - 40);
@@ -1870,7 +1874,8 @@ function generateObstacle() {
     const gap = Math.max(gMin * 0.7, gMin + gameRandom() * (gMax - gMin) - gapReduction);
     gs.nextObstacleX = x + gap;
     
-    if (gameRandom() > 0.35) {
+    const isStarless = gs.mode === 'daily' && gs.daily?.modifier === 'starless';
+    if (!isStarless && gameRandom() > 0.35) {
       let sY;
       if (fromFloor) sY = ceilY + 20 + gameRandom() * Math.max(1, y - ceilY - 40);
       else sY = (y + h + 20) + gameRandom() * Math.max(1, floorY - y - h - 40);
