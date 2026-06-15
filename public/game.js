@@ -31,6 +31,40 @@ const API = {
     this._ready = true;
     await fetchClientProfileOnBoot();
   },
+
+  async getLeaderboard() {
+    try {
+      const res = await fetch('/api/scores');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.scores || [];
+    } catch (e) { return []; }
+  },
+
+  async submitScore(score, playerName, gameData) {
+    if (!this.sessionId || this.sessionId.startsWith('offline_')) return false;
+    try {
+      const token = await this._signScore(score, this.sessionId, gameData);
+      const res = await fetch('/api/scores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-ID': this.sessionId
+        },
+        body: JSON.stringify({ score, playerName, token, gameData })
+      });
+      return res.ok;
+    } catch (e) { return false; }
+  },
+
+  async _signScore(score, sessionId, gameData) {
+    const secret = 'grvflp_' + (navigator.userAgent || '').length;
+    const payload = JSON.stringify({ score, sessionId, gameData }) + secret;
+    const msgBuffer = new TextEncoder().encode(payload);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 };
 
 async function fetchClientProfileOnBoot() {
@@ -73,41 +107,7 @@ async function fetchClientProfileOnBoot() {
       window.ProfileUI.init();
     }
   }
-
-  async getLeaderboard() {
-    try {
-      const res = await fetch('/api/scores');
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.scores || [];
-    } catch (e) { return []; }
-  },
-
-  async submitScore(score, playerName, gameData) {
-    if (!this.sessionId || this.sessionId.startsWith('offline_')) return false;
-    try {
-      const token = await this._signScore(score, this.sessionId, gameData);
-      const res = await fetch('/api/scores', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-ID': this.sessionId
-        },
-        body: JSON.stringify({ score, playerName, token, gameData })
-      });
-      return res.ok;
-    } catch (e) { return false; }
-  },
-
-  async _signScore(score, sessionId, gameData) {
-    const secret = 'grvflp_' + (navigator.userAgent || '').length;
-    const payload = JSON.stringify({ score, sessionId, gameData }) + secret;
-    const msgBuffer = new TextEncoder().encode(payload);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-};
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  OVERLAY DOM WIRING
