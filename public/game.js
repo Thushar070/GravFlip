@@ -2515,45 +2515,82 @@ function drawMaxSpeedFlash() {
 
 function drawHUD() {
   ctx.save();
-  ctx.shadowBlur = 0; ctx.textBaseline = 'top';
+  ctx.textBaseline = 'top';
 
-  ctx.font = '11px Orbitron, monospace';
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  // Apply default text drop shadow for clarity against stars/nebula
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetX = 1;
+  ctx.shadowOffsetY = 1;
+
+  // Header: SCORE
+  ctx.font = 'bold 10px "Orbitron", monospace';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
   ctx.textAlign = 'left';
   ctx.fillText('SCORE', 16, 12);
-  ctx.font = 'bold 22px Orbitron, monospace';
-  ctx.fillStyle = COLORS.TEXT;
-  ctx.fillText(gs.score.toString(), 16, 26);
 
-  ctx.font = '10px Orbitron, monospace';
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  // Score value: Colored and glowing based on current mode
+  let scoreColor = COLORS.NEON_CYAN;
+  if (gs.mode === 'mirror') scoreColor = COLORS.NEON_PINK;
+  else if (gs.mode === 'blitz') scoreColor = COLORS.NEON_ORANGE;
+  else if (gs.mode === 'campaign') scoreColor = '#ffd700';
+
+  ctx.font = '900 24px "Orbitron", monospace';
+  ctx.fillStyle = scoreColor;
+  ctx.shadowColor = scoreColor;
+  ctx.shadowBlur = 10;
+  ctx.fillText(gs.score.toString(), 16, 24);
+
+  // Reset shadow for minor HUD details to avoid blurriness, use crisp black backing instead
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+  ctx.shadowOffsetX = 1;
+  ctx.shadowOffsetY = 1;
+
+  // DISTANCE
+  ctx.font = 'bold 10px "Orbitron", monospace';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
   ctx.fillText('DIST ' + Math.floor(gs.distanceTraveled) + 'm', 16, 52);
 
+  // Header: BEST / STARS
   ctx.textAlign = 'right';
-  ctx.font = '11px Orbitron, monospace';
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.fillText('BEST', DISPLAY.WIDTH - 16, 12);
-  ctx.font = 'bold 18px Orbitron, monospace';
-  ctx.fillStyle = COLORS.TEXT;
+  ctx.font = 'bold 10px "Orbitron", monospace';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.shadowBlur = 0;
+  ctx.fillText(gs.mode === 'campaign' ? 'STARS' : 'BEST', DISPLAY.WIDTH - 16, 12);
+
+  // High score / Star Count value
   if (gs.mode === 'campaign' && gs.campaign) {
     const progress = loadCampaignProgress();
     let totalStars = 0;
     progress.starsPerWorld.forEach(s => totalStars += s);
-    ctx.fillText('STARS ' + totalStars + '/15', DISPLAY.WIDTH - 16, 26);
+    ctx.font = '900 18px "Orbitron", monospace';
+    ctx.fillStyle = '#ffd700'; // Gold glow for stars
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 8;
+    ctx.fillText(totalStars + ' / 15', DISPLAY.WIDTH - 16, 24);
   } else {
-    ctx.fillText(gs.highScore.toString(), DISPLAY.WIDTH - 16, 26);
+    ctx.font = '900 18px "Orbitron", monospace';
+    ctx.fillStyle = '#00ffaa'; // Cyber green glow for best high score
+    ctx.shadowColor = '#00ffaa';
+    ctx.shadowBlur = 8;
+    ctx.fillText(gs.highScore.toString(), DISPLAY.WIDTH - 16, 24);
   }
+
+  // Reset shadow for world/zone label
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
 
   // Zone or World badge
   if (gs.mode === 'campaign' && gs.campaign) {
     ctx.textAlign = 'center';
-    ctx.font = '10px Orbitron, monospace';
+    ctx.font = 'bold 11px "Orbitron", monospace';
     ctx.fillStyle = '#ffd700'; // Gold
-    ctx.fillText('WORLD ' + gs.campaign.currentWorld, DISPLAY.WIDTH / 2, 26);
+    ctx.fillText('WORLD ' + gs.campaign.currentWorld, DISPLAY.WIDTH / 2, 24);
     
     // Remaining goal distance
-    ctx.font = '10px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = 'bold 10px "Orbitron", monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
     const remaining = Math.max(0, Math.floor(gs.campaign.distanceGoal - gs.distanceTraveled));
     if (remaining > 0) {
       ctx.fillText('GOAL: ' + remaining + 'm', DISPLAY.WIDTH / 2, 38);
@@ -2564,7 +2601,7 @@ function drawHUD() {
     
     // Progress Bar at bottom of screen
     const w = gs.campaign.currentWorld;
-    const progress = Math.min(1, gs.distanceTraveled / gs.campaign.distanceGoal);
+    const progressVal = Math.min(1, gs.distanceTraveled / gs.campaign.distanceGoal);
     const barH = 4;
     const barY = DISPLAY.HEIGHT - barH;
     ctx.fillStyle = 'rgba(255,255,255,0.1)';
@@ -2577,16 +2614,16 @@ function drawHUD() {
     else if (w === 5) barColor = '#8800ff';
     
     ctx.fillStyle = barColor;
-    ctx.fillRect(0, barY, DISPLAY.WIDTH * progress, barH);
+    ctx.fillRect(0, barY, DISPLAY.WIDTH * progressVal, barH);
   } else {
     ctx.textAlign = 'center';
-    ctx.font = '10px Orbitron, monospace';
-    let zc = 'rgba(255,255,255,0.4)';
-    if (gs.currentZone >= 4) zc = 'rgba(255,60,60,0.6)';
-    else if (gs.currentZone === 3) zc = 'rgba(180,80,255,0.6)';
-    else if (gs.currentZone === 2) zc = 'rgba(80,120,255,0.6)';
+    ctx.font = 'bold 11px "Orbitron", monospace';
+    let zc = 'rgba(255,255,255,0.6)';
+    if (gs.currentZone >= 4) zc = 'rgba(255,60,60,0.85)';
+    else if (gs.currentZone === 3) zc = 'rgba(180,80,255,0.85)';
+    else if (gs.currentZone === 2) zc = 'rgba(80,120,255,0.85)';
     ctx.fillStyle = zc;
-    ctx.fillText('ZONE ' + gs.currentZone, DISPLAY.WIDTH / 2, 26);
+    ctx.fillText('ZONE ' + gs.currentZone, DISPLAY.WIDTH / 2, 24);
   }
 
   // Gravity arrow
