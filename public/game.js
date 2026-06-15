@@ -5555,6 +5555,10 @@ function gameLoop(timestamp) {
   drawWorldCompleteScreen();
   drawGameCompleteScreen();
 
+  if (window.ProfileUI && window.ProfileUI.updateFloatingMenu) {
+    window.ProfileUI.updateFloatingMenu();
+  }
+
   requestAnimationFrame(gameLoop);
 }
 
