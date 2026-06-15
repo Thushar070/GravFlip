@@ -2327,57 +2327,148 @@ function drawStars() {
   for (let i = 0; i < gs.stars.length; i++) {
     const s = gs.stars[i];
     const pulse = 1 + 0.2 * Math.sin(s.phase);
-    const r = 6 * pulse;
+    const r = 7.5 * pulse;
+    const shape = s.shape || 'star';
     
-    let shape = s.shape || 'star';
+    // Calculate 3D flip scale for coin/crystal
+    const flipScale = Math.sin(gs.frameCount * 0.08 + i);
+    
+    ctx.save();
+    
     if (shape === 'star') {
-      ctx.shadowBlur = 10; ctx.shadowColor = COLORS.STAR;
+      // 4-point glowing star
+      ctx.shadowBlur = (10 + 5 * Math.sin(s.phase)) * 1.2;
+      ctx.shadowColor = COLORS.STAR;
       ctx.fillStyle = COLORS.STAR;
-      ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.fill();
-      ctx.shadowBlur = 0; ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.arc(s.x, s.y, r * 0.35, 0, Math.PI * 2); ctx.fill();
+      
+      // Outer sparkle
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(gs.frameCount * 0.015 + i);
+      draw4PointStarPath(ctx, 0, 0, 4, r * 1.2, r * 0.35);
+      ctx.fill();
+      ctx.restore();
+      
+      // Inner white core
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = '#ffffff';
+      ctx.fillStyle = '#ffffff';
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(gs.frameCount * 0.015 + i);
+      draw4PointStarPath(ctx, 0, 0, 4, r * 0.5, r * 0.15);
+      ctx.fill();
+      ctx.restore();
+      
     } else if (shape === 'coin') {
-      ctx.shadowBlur = 10; ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = (10 + 5 * Math.sin(s.phase)) * 1.2;
+      ctx.shadowColor = '#ffd700';
       ctx.fillStyle = '#ffd700';
-      ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = '#000000';
-      ctx.font = 'bold ' + Math.floor(r * 1.2) + 'px Orbitron, monospace';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('$', s.x, s.y);
+      
+      ctx.translate(s.x, s.y);
+      ctx.scale(Math.abs(flipScale) < 0.1 ? 0.1 : flipScale, 1);
+      
+      // Outer gold circle
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Inner detail
+      ctx.fillStyle = '#111133';
+      ctx.font = 'bold ' + Math.floor(r * 1.2) + 'px "Orbitron", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('$', 0, 0);
+      
     } else if (shape === 'crystal') {
-      ctx.shadowBlur = 10; ctx.shadowColor = '#aa00ff';
+      ctx.shadowBlur = (10 + 5 * Math.sin(s.phase)) * 1.2;
+      ctx.shadowColor = '#aa00ff';
       ctx.fillStyle = '#aa00ff';
-      ctx.beginPath();
-      ctx.moveTo(s.x, s.y - r);
-      ctx.lineTo(s.x + r, s.y);
-      ctx.lineTo(s.x, s.y + r);
-      ctx.lineTo(s.x - r, s.y);
-      ctx.closePath();
-      ctx.fill();
+      
+      ctx.translate(s.x, s.y);
+      ctx.scale(Math.abs(flipScale) < 0.1 ? 0.1 : flipScale, 1);
+      ctx.rotate(Math.PI / 4); // Turn into diamond
+      
+      // Outer diamond
+      ctx.fillRect(-r, -r, r * 2, r * 2);
+      
+      // Inner diamond
       ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(s.x, s.y - r * 0.4);
-      ctx.lineTo(s.x + r * 0.4, s.y);
-      ctx.lineTo(s.x, s.y + r * 0.4);
-      ctx.lineTo(s.x - r * 0.4, s.y);
-      ctx.closePath();
-      ctx.fill();
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = '#ffffff';
+      ctx.fillRect(-r * 0.4, -r * 0.4, r * 0.8, r * 0.8);
+      
     } else if (shape === 'orb') {
-      ctx.shadowBlur = 12; ctx.shadowColor = '#ffffff';
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.fill();
+      // Plasma orb with radial gradient
+      ctx.translate(s.x, s.y);
+      const radGrd = ctx.createRadialGradient(0, 0, 1, 0, 0, r * 1.3);
+      radGrd.addColorStop(0, '#ffffff');
+      radGrd.addColorStop(0.3, '#00ffff');
+      radGrd.addColorStop(0.8, 'rgba(0, 100, 255, 0.6)');
+      radGrd.addColorStop(1, 'rgba(0, 100, 255, 0)');
+      
+      ctx.shadowBlur = 12 + 6 * Math.sin(s.phase);
+      ctx.shadowColor = '#00ffff';
+      ctx.fillStyle = radGrd;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 1.3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Draw outer plasma ring
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * (1 + 0.15 * Math.sin(gs.frameCount * 0.1)), 0, Math.PI * 2);
+      ctx.stroke();
+      
     } else if (shape === 'rainbow') {
-      const hue = (gs.frameCount * 2 + i * 20) % 360;
+      const hue = (gs.frameCount * 2.5 + i * 20) % 360;
       const color = 'hsl(' + hue + ', 100%, 60%)';
-      ctx.shadowBlur = 12; ctx.shadowColor = color;
+      ctx.shadowBlur = 12 + 6 * Math.sin(s.phase);
+      ctx.shadowColor = color;
       ctx.fillStyle = color;
-      ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.fill();
+      
+      ctx.translate(s.x, s.y);
+      ctx.rotate(-gs.frameCount * 0.03 + i);
+      
+      // Rainbow star sparkle
+      draw4PointStarPath(ctx, 0, 0, 4, r * 1.2, r * 0.35);
+      ctx.fill();
+      
       ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(s.x, s.y, r * 0.4, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = '#ffffff';
+      draw4PointStarPath(ctx, 0, 0, 4, r * 0.4, r * 0.12);
+      ctx.fill();
     }
+    
+    ctx.restore();
   }
   ctx.restore();
+}
+
+function draw4PointStarPath(c, cx, cy, spikes, outerRadius, innerRadius) {
+  let rot = Math.PI / 2 * 3;
+  let x = cx;
+  let y = cy;
+  let step = Math.PI / spikes;
+
+  c.beginPath();
+  c.moveTo(cx, cy - outerRadius);
+  for (let i = 0; i < spikes; i++) {
+    x = cx + Math.cos(rot) * outerRadius;
+    y = cy + Math.sin(rot) * outerRadius;
+    c.lineTo(x, y);
+    rot += step;
+
+    x = cx + Math.cos(rot) * innerRadius;
+    y = cy + Math.sin(rot) * innerRadius;
+    c.lineTo(x, y);
+    rot += step;
+  }
+  c.lineTo(cx, cy - outerRadius);
+  c.closePath();
 }
 
 function drawTrailFor(p, color) {
