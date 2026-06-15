@@ -2102,7 +2102,8 @@ function killPlayer(who) {
     finalSpeed: gs.speed,
     mode: gs.mode,
     world: gs.campaign ? gs.campaign.currentWorld : 0,
-    replay: gs.lastReplay
+    replay: gs.lastReplay,
+    timingTampered: !!gs.timingTampered
   };
   
   if (gs.mode !== 'campaign') {
