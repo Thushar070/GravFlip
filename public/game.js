@@ -5520,11 +5520,16 @@ function gameLoop(timestamp) {
     gs.distanceTraveled += gs.speed * dt;
     checkZoneMilestone();
 
-    const speedInc = gs.mode === 'blitz' ? SPEED.INCREMENT * 3 : SPEED.INCREMENT;
-    const maxSpeed = gs.mode === 'blitz' ? 14 : SPEED.MAX;
+    const activeSubMode = (gs.mode === 'daily' && gs.daily) ? gs.daily.mode : gs.mode;
+    let speedMultiplier = 1;
+    if (gs.mode === 'daily' && gs.daily?.modifier === 'speed_surge') {
+      speedMultiplier = 2;
+    }
+    const speedInc = (activeSubMode === 'blitz' ? SPEED.INCREMENT * 3 : SPEED.INCREMENT) * speedMultiplier;
+    const maxSpeed = activeSubMode === 'blitz' ? 14 : SPEED.MAX;
     if (gs.speed < maxSpeed) gs.speed += speedInc * dt;
 
-    if (gs.mode === 'blitz') {
+    if (activeSubMode === 'blitz') {
       gs.modeStats.maxSpeedReached = Math.max(gs.modeStats.maxSpeedReached, gs.speed);
       if (gs.speed > 12 && !speedWarningOsc) startSpeedWarning();
       else if (gs.speed <= 12 && speedWarningOsc) stopSpeedWarning();
