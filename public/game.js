@@ -3635,6 +3635,8 @@ function getObstacleColors() {
   if (gs.theme === 'neongrid') return { body: '#00ff44', glow: '#00ff44' };
   if (gs.theme === 'crimsonvoid') return { body: '#cc0033', glow: '#ff0022' };
   if (gs.theme === 'aurora') return { body: '#004466', glow: '#00ff88' };
+  if (gs.theme === 'winter_neon') return { body: '#00e5ff', glow: '#00e5ff' };
+  if (gs.theme === 'synthwave_sunset') return { body: '#ff007f', glow: '#ffaa00' };
   
   const isMaxBlitz = gs.mode === 'blitz' && gs.speed >= 14;
   if (isMaxBlitz) return { body: COLORS.NEON_ORANGE, glow: '#ffaa44' };
