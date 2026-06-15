@@ -2187,6 +2187,22 @@ function getCanvasCoords(e) {
   return { mx, my };
 }
 
+function getScrubberBounds() {
+  const scrW = 360;
+  const scrH = 24;
+  const scrX = (DISPLAY.WIDTH - scrW) / 2;
+  const scrY = DISPLAY.HEIGHT * 0.73 - scrH / 2;
+  return { x: scrX, y: scrY, w: scrW, h: scrH };
+}
+
+function updateScrubPosition(mx) {
+  const bounds = getScrubberBounds();
+  const pct = Math.max(0, Math.min(1, (mx - bounds.x) / bounds.w));
+  if (gs.lastReplay && gs.lastReplay.length > 0) {
+    gs.replayIndex = Math.max(0, Math.min(gs.lastReplay.length - 1, Math.floor(pct * (gs.lastReplay.length - 1))));
+  }
+}
+
 function confirmWorldCompleteSelection() {
   const sel = gs.worldCompleteSelectIndex || 0;
   if (sel === 0) {
