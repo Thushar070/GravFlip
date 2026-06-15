@@ -2014,7 +2014,8 @@ function killPlayer(who) {
   
   const tgt = (who === 'p2' && gs.player2) ? gs.player2 : gs.player;
   
-  if (gs.mode === 'mirror') {
+  const activeSubMode = (gs.mode === 'daily' && gs.daily) ? gs.daily.mode : gs.mode;
+  if (activeSubMode === 'mirror') {
     if (gs.player) gs.player.alive = false;
     if (gs.player2) gs.player2.alive = false;
     gs.modeStats.whoDied = who || 'p1';
@@ -2043,7 +2044,11 @@ function killPlayer(who) {
   if (gs.mode !== 'campaign') {
     if (gs.score > gs.highScore) {
       gs.highScore = gs.score;
-      saveHighScore(gs.mode, gs.highScore);
+      if (gs.mode === 'daily' && dailyChallenge) {
+        saveHighScore('daily_' + dailyChallenge.date, gs.highScore);
+      } else {
+        saveHighScore(gs.mode, gs.highScore);
+      }
       gs.newBest = true;
       gs.namePromptShown = false;
       gs.newBestTimer = 0;
