@@ -661,6 +661,7 @@ const ProfileUI = {
     if (this.colorSuit) this.colorSuit.value = av.suit || '#ffffff';
     if (this.colorAccent) this.colorAccent.value = av.accent || '#00ffff';
     if (this.selectEmblem) this.selectEmblem.value = av.emblem || 'star';
+    if (this.selectSeasonalTheme) this.selectSeasonalTheme.value = clientProfile.selectedTheme || 'none';
     drawAvatarCustomizerPreview();
   },
 
