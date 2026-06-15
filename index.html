@@ -8,6 +8,7 @@
   <meta property="og:title" content="GravFlip Runner">
   <meta property="og:description" content="Flip gravity. Dodge obstacles. Survive.">
   <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0a0a1a">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%2300ffff'/%3E%3Cstop offset='100%25' stop-color='%234488ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2 L22 12 L20 12 L20 26 L12 26 L12 12 L10 12 Z' fill='url(%23g)'/%3E%3Ccircle cx='16' cy='28' r='3' fill='%23ff4444' opacity='0.8'/%3E%3Ccircle cx='14' cy='29' r='1.5' fill='%23ffaa00' opacity='0.6'/%3E%3Ccircle cx='18' cy='29' r='1.5' fill='%23ffaa00' opacity='0.6'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +18,33 @@
 <body>
   <div id="game-container">
     <canvas id="gameCanvas"></canvas>
+
+    <!-- Leaderboard overlay -->
+    <div id="leaderboard-overlay" class="overlay hidden">
+      <div class="overlay-panel">
+        <h2 class="overlay-title">LEADERBOARD</h2>
+        <div id="leaderboard-list"></div>
+        <button class="overlay-btn" id="close-leaderboard">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Name entry overlay (shown after game over, before score submit) -->
+    <div id="name-overlay" class="overlay hidden">
+      <div class="overlay-panel">
+        <h2 class="overlay-title">NEW HIGH SCORE!</h2>
+        <p class="overlay-sub" id="name-overlay-score"></p>
+        <input type="text" id="player-name-input" maxlength="16" placeholder="Your name..." autocomplete="off" />
+        <button class="overlay-btn" id="submit-score-btn">SUBMIT</button>
+        <button class="overlay-btn secondary" id="skip-score-btn">SKIP</button>
+      </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loading-indicator" class="hidden">
+      <span class="loading-dot"></span>
+      <span class="loading-dot"></span>
+      <span class="loading-dot"></span>
+    </div>
   </div>
   <script src="game.js" defer></script>
 </body>

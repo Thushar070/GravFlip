@@ -1,6 +1,174 @@
 // @license PROPRIETARY — All rights reserved. Do not copy or reuse.
 
 // ═══════════════════════════════════════════════════════════════
+//  API LAYER — Session, Leaderboard, Score Submission
+// ═══════════════════════════════════════════════════════════════
+const API = {
+  sessionId: null,
+  _ready: false,
+
+  async init() {
+    // Try localStorage first (persist session across refreshes)
+    try {
+      this.sessionId = localStorage.getItem('gravflip_session');
+    } catch (e) {}
+    if (this.sessionId) { this._ready = true; return; }
+    try {
+      const res = await fetch('/api/auth', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        this.sessionId = data.sessionId;
+        try { localStorage.setItem('gravflip_session', this.sessionId); } catch (e) {}
+      }
+    } catch (e) {
+      // Offline fallback — game still works, scores just won't submit
+      this.sessionId = 'offline_' + Math.random().toString(36).substring(2);
+    }
+    this._ready = true;
+  },
+
+  async getLeaderboard() {
+    try {
+      const res = await fetch('/api/scores');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.scores || [];
+    } catch (e) { return []; }
+  },
+
+  async submitScore(score, playerName, gameData) {
+    if (!this.sessionId || this.sessionId.startsWith('offline_')) return false;
+    try {
+      const token = await this._signScore(score, this.sessionId, gameData);
+      const res = await fetch('/api/scores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-ID': this.sessionId
+        },
+        body: JSON.stringify({ score, playerName, token, gameData })
+      });
+      return res.ok;
+    } catch (e) { return false; }
+  },
+
+  async _signScore(score, sessionId, gameData) {
+    const secret = 'grvflp_' + (navigator.userAgent || '').length;
+    const payload = JSON.stringify({ score, sessionId, gameData }) + secret;
+    const msgBuffer = new TextEncoder().encode(payload);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  OVERLAY DOM WIRING
+// ═══════════════════════════════════════════════════════════════
+const overlayLeaderboard = document.getElementById('leaderboard-overlay');
+const overlayName = document.getElementById('name-overlay');
+const leaderboardList = document.getElementById('leaderboard-list');
+const closeLeaderboardBtn = document.getElementById('close-leaderboard');
+const submitScoreBtn = document.getElementById('submit-score-btn');
+const skipScoreBtn = document.getElementById('skip-score-btn');
+const playerNameInput = document.getElementById('player-name-input');
+const nameOverlayScore = document.getElementById('name-overlay-score');
+const loadingIndicator = document.getElementById('loading-indicator');
+
+function showLoading() { if (loadingIndicator) loadingIndicator.classList.remove('hidden'); }
+function hideLoading() { if (loadingIndicator) loadingIndicator.classList.add('hidden'); }
+
+function showLeaderboard() {
+  if (!overlayLeaderboard || !leaderboardList) return;
+  overlayLeaderboard.classList.remove('hidden');
+  showLoading();
+  API.getLeaderboard().then(scores => {
+    hideLoading();
+    if (scores.length === 0) {
+      leaderboardList.innerHTML = '<div class="lb-empty">NO SCORES YET — BE THE FIRST!</div>';
+      return;
+    }
+    leaderboardList.innerHTML = scores.map((s, i) => {
+      const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+      return `<div class="lb-entry">
+        <span class="lb-rank ${rankClass}">${i + 1}</span>
+        <span class="lb-name">${escapeHtml(s.name || 'Anonymous')}</span>
+        <span class="lb-score">${s.score}</span>
+      </div>`;
+    }).join('');
+  }).catch(() => {
+    hideLoading();
+    leaderboardList.innerHTML = '<div class="lb-empty">OFFLINE — CANNOT LOAD SCORES</div>';
+  });
+}
+
+function hideLeaderboard() {
+  if (overlayLeaderboard) overlayLeaderboard.classList.add('hidden');
+}
+
+function showNameEntry(score) {
+  if (!overlayName) return;
+  if (nameOverlayScore) nameOverlayScore.textContent = 'SCORE: ' + Math.floor(score);
+  if (playerNameInput) {
+    playerNameInput.value = '';
+    try {
+      const saved = localStorage.getItem('gravflip_playerName');
+      if (saved) playerNameInput.value = saved;
+    } catch (e) {}
+  }
+  overlayName.classList.remove('hidden');
+  if (playerNameInput) setTimeout(() => playerNameInput.focus(), 100);
+}
+
+function hideNameEntry() {
+  if (overlayName) overlayName.classList.add('hidden');
+}
+
+async function doScoreSubmit() {
+  const name = (playerNameInput ? playerNameInput.value : 'Anonymous')
+    .replace(/[^a-zA-Z0-9 _\-]/g, '').substring(0, 16) || 'Anonymous';
+  try { localStorage.setItem('gravflip_playerName', name); } catch (e) {}
+  hideNameEntry();
+  showLoading();
+  const gameData = gs._lastGameData || {
+    frameCount: gs.frameCount,
+    starsCollected: gs.modeStats.starsCollected,
+    survivalTimeMs: gs.modeStats.playTimeMs,
+    finalSpeed: gs.speed,
+    mode: gs.mode,
+    world: gs.campaign ? gs.campaign.currentWorld : 0
+  };
+  await API.submitScore(gs.score, name, gameData);
+  hideLoading();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Wire overlay buttons
+if (closeLeaderboardBtn) closeLeaderboardBtn.addEventListener('click', (e) => {
+  e.stopPropagation(); hideLeaderboard();
+});
+if (submitScoreBtn) submitScoreBtn.addEventListener('click', (e) => {
+  e.stopPropagation(); doScoreSubmit();
+});
+if (skipScoreBtn) skipScoreBtn.addEventListener('click', (e) => {
+  e.stopPropagation(); hideNameEntry();
+});
+if (playerNameInput) playerNameInput.addEventListener('keydown', (e) => {
+  e.stopPropagation();
+  if (e.code === 'Enter') { e.preventDefault(); doScoreSubmit(); }
+});
+// Prevent overlay clicks from reaching game canvas
+if (overlayLeaderboard) overlayLeaderboard.addEventListener('click', (e) => e.stopPropagation());
+if (overlayLeaderboard) overlayLeaderboard.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: false });
+if (overlayName) overlayName.addEventListener('click', (e) => e.stopPropagation());
+if (overlayName) overlayName.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: false });
+
+// ═══════════════════════════════════════════════════════════════
 //  CONFIG — split into grouped objects
 // ═══════════════════════════════════════════════════════════════
 const DISPLAY = { WIDTH: 800, HEIGHT: 450, FLOOR_HEIGHT: 24 };
@@ -373,7 +541,10 @@ function createInitialState() {
       playTimeMs: 0, starsCollected: 0,
       whoDied: null, syncFlips: 0,
       maxSpeedReached: 0, zonesCleared: 0
-    }
+    },
+    // Anti-cheat game data (recorded on death, sent to server)
+    gameStartTime: 0,
+    _lastGameData: null
   };
 }
 
@@ -703,6 +874,16 @@ function killPlayer(who) {
   gs.deathDelay = 48;
   gs.newBest = false;
   
+  // Record anti-cheat game data snapshot
+  gs._lastGameData = {
+    frameCount: gs.frameCount,
+    starsCollected: gs.modeStats.starsCollected,
+    survivalTimeMs: gs.modeStats.playTimeMs,
+    finalSpeed: gs.speed,
+    mode: gs.mode,
+    world: gs.campaign ? gs.campaign.currentWorld : 0
+  };
+  
   if (gs.mode !== 'campaign') {
     if (gs.score > gs.highScore) {
       gs.highScore = gs.score;
@@ -751,6 +932,8 @@ function startCampaignWorld(worldNum) {
   gs.screen = 'playing';
   gs.player.alive = true;
   gs.modeStats.playTimeMs = 0;
+  gs.gameStartTime = performance.now();
+  gs._lastGameData = null;
 
   // Reset special spawn trackers
   gs.lastLaserDist = 0;
@@ -802,6 +985,8 @@ function confirmModeSelection() {
   gs.screen = 'playing';
   gs.player.alive = true;
   gs.modeStats.playTimeMs = 0;
+  gs.gameStartTime = performance.now();
+  gs._lastGameData = null;
 
   if (sel === 'blitz') gs.speed = 5;
   if (sel === 'mirror') gs.player2 = createPlayer(0.8, true);
@@ -922,6 +1107,22 @@ document.addEventListener('keydown', (e) => {
     if (e.code === 'ArrowRight') { e.preventDefault(); gs.worldCompleteSelectIndex = 1; return; }
   }
   if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); handleInput(); return; }
+  // Leaderboard toggle on L key
+  if (e.code === 'KeyL' && (gs.screen === 'dead' || gs.screen === 'modeselect' || gs.screen === 'start')) {
+    e.preventDefault();
+    if (overlayLeaderboard && !overlayLeaderboard.classList.contains('hidden')) {
+      hideLeaderboard();
+    } else {
+      showLeaderboard();
+    }
+    return;
+  }
+  // Submit score on S key from death screen
+  if (e.code === 'KeyS' && gs.screen === 'dead' && gs.mode !== 'campaign') {
+    e.preventDefault();
+    showNameEntry(gs.score);
+    return;
+  }
   if (e.code === 'KeyP' || e.code === 'Escape') {
     e.preventDefault();
     if (gs.screen === 'playing') pauseGame();
@@ -2790,17 +2991,25 @@ function drawDeathScreen() {
     ctx.shadowBlur = 12; ctx.shadowColor = COLORS.STAR;
     ctx.fillStyle = 'rgba(255,221,0,' + sparkle + ')';
     ctx.font = 'bold 20px Orbitron, monospace';
-    ctx.fillText('\u2726 NEW BEST \u2726', DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.62);
+    ctx.fillText('\u2726 NEW BEST \u2726', DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.58);
   }
 
   const pulse = 0.4 + 0.6 * Math.sin(gs.frameCount * 0.06);
   ctx.shadowBlur = 4;
+
+  // Leaderboard button hint
+  if (gs.mode !== 'campaign') {
+    ctx.fillStyle = 'rgba(0,255,255,' + (0.3 + pulse * 0.3) + ')';
+    ctx.font = '11px Orbitron, monospace';
+    ctx.fillText('[L] LEADERBOARD    [S] SUBMIT SCORE', DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.68);
+  }
+
   ctx.fillStyle = 'rgba(255,255,255,' + (0.4 + pulse * 0.4) + ')';
   ctx.font = '14px Orbitron, monospace';
   if (gs.mode === 'campaign') {
-    ctx.fillText('PRESS SPACE OR TAP TO RETRY', DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.80);
+    ctx.fillText('PRESS SPACE OR TAP TO RETRY', DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.82);
   } else {
-    ctx.fillText('PRESS SPACE OR TAP TO CONTINUE', DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.80);
+    ctx.fillText('PRESS SPACE OR TAP TO CONTINUE', DISPLAY.WIDTH / 2, DISPLAY.HEIGHT * 0.82);
   }
   ctx.restore();
 }
@@ -3296,4 +3505,6 @@ function gameLoop(timestamp) {
 // ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
+// Initialize API session (non-blocking, game works offline)
+API.init().catch(() => {});
 requestAnimationFrame(gameLoop);

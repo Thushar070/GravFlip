@@ -1,0 +1,14 @@
+{
+  "name": "gravflip-runner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GravFlip Runner — Flip gravity. Dodge obstacles. Survive.",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "npx serve public -l 3000"
+  },
+  "dependencies": {
+    "@vercel/kv": "^2.0.0"
+  }
+}
