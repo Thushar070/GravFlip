@@ -5934,6 +5934,7 @@ function gameLoop(timestamp) {
   // Overlay screens (no shake)
   drawStartScreen();
   drawModeSelectScreen();
+  drawRecentScoresTicker();
   drawPauseScreen();
   drawDeathScreen();
   drawWorldCompleteScreen();
