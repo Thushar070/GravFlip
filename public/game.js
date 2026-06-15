@@ -5667,6 +5667,12 @@ function gameLoop(timestamp) {
   if (dt > 3) dt = 3;
   lastTime = timestamp;
 
+  // Poll recent scores for spectator ticker every 15 seconds
+  if (timestamp - lastTickerFetchTime > 15000) {
+    lastTickerFetchTime = timestamp;
+    fetchRecentScoresForTicker().catch(() => {});
+  }
+
   // ── UPDATE ──
   if (gs.screen === 'playing' && gs.player.alive && (gs.mode !== 'mirror' || (gs.player2 && gs.player2.alive))) {
     updateSpecialRules(dt);
@@ -5807,10 +5813,12 @@ function gameLoop(timestamp) {
     updateStarfield(dt);
     updateNebulas(dt);
     gs.frameCount++;
+    recentScoresOffset -= 1.2 * dt;
   } else if (gs.screen === 'modeselect') {
     updateStarfield(dt);
     updateNebulas(dt);
     gs.frameCount++;
+    recentScoresOffset -= 1.2 * dt;
   } else if (gs.screen === 'paused') {
     gs.frameCount++;
   } else if (gs.screen === 'dead') {
