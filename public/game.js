@@ -2319,8 +2319,8 @@ function updateSinglePlayer(p, isP2, dt) {
 
   p.wasGrounded = p.grounded;
 
-  if (gravFlip) p.vy -= PHYSICS.GRAVITY * dt;
-  else p.vy += PHYSICS.GRAVITY * dt;
+  if (gravFlip) p.vy -= getGravity() * dt;
+  else p.vy += getGravity() * dt;
 
   if (p.vy > PHYSICS.MAX_VY) p.vy = PHYSICS.MAX_VY;
   if (p.vy < -PHYSICS.MAX_VY) p.vy = -PHYSICS.MAX_VY;
