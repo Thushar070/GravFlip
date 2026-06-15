@@ -1343,6 +1343,16 @@ const CONFIG = {
   DANGER_DISTANCE: GAMEPLAY.DANGER_DISTANCE, COLORS: COLORS
 };
 
+Object.freeze(DISPLAY);
+Object.freeze(PHYSICS);
+Object.freeze(SPEED);
+Object.freeze(PLAYER_CFG);
+Object.freeze(GAMEPLAY);
+Object.freeze(COLORS);
+Object.freeze(PARTICLE_CFG);
+Object.freeze(AUDIO_CFG);
+Object.freeze(CONFIG);
+
 const ARPEGGIO_NOTES = [130.81, 164.81, 196.0, 246.94];
 
 // ═══════════════════════════════════════════════════════════════
