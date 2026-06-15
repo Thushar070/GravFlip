@@ -65,6 +65,7 @@ export default async function handler(req, res) {
 
   // Save score to daily leaderboard
   await DB.addDailyScore(cleanName, Math.floor(score), sessionId, date);
+  await DB.addRecentScore(cleanName, Math.floor(score), 'daily');
 
   // Update session metadata
   await DB.updateSession(sessionId, {
