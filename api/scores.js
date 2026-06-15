@@ -62,6 +62,7 @@ export default async function handler(req, res) {
       .substring(0, 16);
 
     await DB.addScore(playerName, Math.floor(submission.score), sessionId);
+    await DB.addRecentScore(playerName, Math.floor(submission.score), submission.gameData?.mode || 'classic');
     await DB.updateSession(sessionId, {
       submitCount: (session.submitCount || 0) + 1,
       lastSubmit: now
