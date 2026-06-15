@@ -1,5 +1,29 @@
 // @license PROPRIETARY — All rights reserved. Do not copy or reuse.
 
+let dailyChallenge = null;
+
+async function fetchDailyChallenge() {
+  try {
+    const res = await fetch('/api/daily/today');
+    if (res.ok) {
+      dailyChallenge = await res.json();
+    }
+  } catch (e) {
+    console.error('Failed to load daily challenge:', e);
+  }
+  if (!dailyChallenge) {
+    // Offline / fallback daily challenge details
+    dailyChallenge = {
+      date: new Date().toISOString().split('T')[0],
+      seed: 12345,
+      mode: 'classic',
+      modifier: 'low_gravity',
+      modifierName: 'LOW GRAVITY',
+      modifierDesc: 'Gravity is reduced by 30%. Floats feel airy, timing is elongated.'
+    };
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  API LAYER — Session, Leaderboard, Score Submission
 // ═══════════════════════════════════════════════════════════════
@@ -8,6 +32,7 @@ const API = {
   _ready: false,
 
   async init() {
+    await fetchDailyChallenge();
     // Try localStorage first (persist session across refreshes)
     try {
       this.sessionId = localStorage.getItem('gravflip_session');
