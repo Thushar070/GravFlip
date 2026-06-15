@@ -2091,7 +2091,8 @@ function killPlayer(who) {
     survivalTimeMs: gs.modeStats.playTimeMs,
     finalSpeed: gs.speed,
     mode: gs.mode,
-    world: gs.campaign ? gs.campaign.currentWorld : 0
+    world: gs.campaign ? gs.campaign.currentWorld : 0,
+    replay: gs.lastReplay
   };
   
   if (gs.mode !== 'campaign') {
