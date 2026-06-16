@@ -1259,16 +1259,7 @@ function drawAvatarCustomizerPreview() {
   previewCtx.restore();
 }
 
-// Wire overlay buttons
-const overlayLeaderboard = document.getElementById('leaderboard-overlay');
-const overlayName = document.getElementById('name-overlay');
-const leaderboardList = document.getElementById('leaderboard-list');
-const closeLeaderboardBtn = document.getElementById('close-leaderboard');
-const submitScoreBtn = document.getElementById('submit-score-btn');
-const skipScoreBtn = document.getElementById('skip-score-btn');
-const playerNameInput = document.getElementById('player-name-input');
-const nameOverlayScore = document.getElementById('name-overlay-score');
-const loadingIndicator = document.getElementById('loading-indicator');
+// Wire overlay buttons (declarations moved to top)
 
 if (closeLeaderboardBtn) closeLeaderboardBtn.addEventListener('click', (e) => {
   e.stopPropagation(); hideLeaderboard();
